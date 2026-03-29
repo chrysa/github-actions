@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.3] - 2026-03-29
+
+### Documentation
+
+- Docs: add CI, release and license badges to README ([`87a8f4f`](87a8f4fd2b22a51dad7fb7848de3a91b0c3db1aa))
+
 ## [1.0.2] - 2026-03-29
 
 ### Bug Fixes
@@ -15,6 +21,7 @@
 ### Miscellaneous
 
 - Chore: add dependabot configuration for github-actions ([`abf0883`](abf088388658a6d35e9d18402639c79e28de36ce))
+- Chore: update CHANGELOG.md for v1.0.2 [skip ci] ([`1452774`](14527749daee477413ea283a359c6fa0d4377a9b))
 
 ## [1.0.1] - 2026-03-29
 
