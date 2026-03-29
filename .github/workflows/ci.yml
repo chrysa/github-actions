@@ -63,24 +63,12 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@v4.4.2
 
-      - name: Create and push version tag
-        if: steps.gitversion.outputs.preReleaseTag == ''
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          VERSION="v${{ steps.gitversion.outputs.majorMinorPatch }}"
-          MAJOR="v${{ steps.gitversion.outputs.major }}"
-          git tag -a "$VERSION" -m "Release $VERSION" || echo "Tag $VERSION already exists"
-          git push origin "$VERSION" || echo "Tag $VERSION already pushed"
-          git tag -fa "$MAJOR" -m "Latest v${{ steps.gitversion.outputs.major }}"
-          git push origin "$MAJOR" --force
-
-      - name: Generate changelog
+      - name: Generate CHANGELOG.md
         if: steps.gitversion.outputs.preReleaseTag == ''
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
-          args: --tag v${{ steps.gitversion.outputs.majorMinorPatch }} --strip header
+          args: --tag v${{ steps.gitversion.outputs.majorMinorPatch }}
         env:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
@@ -88,21 +76,26 @@ jobs:
       - name: Generate release notes
         if: steps.gitversion.outputs.preReleaseTag == ''
         uses: orhun/git-cliff-action@v4
-        id: release_notes
         with:
           config: cliff.toml
-          args: --tag v${{ steps.gitversion.outputs.majorMinorPatch }} --latest --strip all
+          args: --unreleased --tag v${{ steps.gitversion.outputs.majorMinorPatch }} --strip all
         env:
+          OUTPUT: release_notes.md
           GITHUB_REPO: ${{ github.repository }}
 
-      - name: Commit changelog
+      - name: Commit, tag and push
         if: steps.gitversion.outputs.preReleaseTag == ''
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          VERSION="v${{ steps.gitversion.outputs.majorMinorPatch }}"
+          MAJOR="v${{ steps.gitversion.outputs.major }}"
           git add CHANGELOG.md
-          git diff --staged --quiet || git commit -m "chore: update CHANGELOG.md for v${{ steps.gitversion.outputs.majorMinorPatch }} [skip ci]"
-          git push origin main
+          git diff --staged --quiet || git commit -m "chore: update CHANGELOG.md for $VERSION [skip ci]"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin HEAD:main --follow-tags
+          git tag -fa "$MAJOR" -m "Latest v${{ steps.gitversion.outputs.major }}"
+          git push origin "$MAJOR" --force
 
       - name: Create GitHub Release
         if: steps.gitversion.outputs.preReleaseTag == ''
@@ -110,5 +103,5 @@ jobs:
         with:
           tag_name: v${{ steps.gitversion.outputs.majorMinorPatch }}
           name: v${{ steps.gitversion.outputs.majorMinorPatch }}
-          body: ${{ steps.release_notes.outputs.content }}
+          body_path: release_notes.md
           make_latest: true
