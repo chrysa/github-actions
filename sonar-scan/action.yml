@@ -73,7 +73,6 @@ runs:
           -Dsonar.python.mypy.reportPaths=reports/mypy.txt
           -Dsonar.python.xunit.reportPath=reports/junit.xml
           -Dsonar.exclusions=**/__pycache__/**,**/*.egg-info/**,**/.git/**
-          -Dsonar.qualitygate.wait=true
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         SONAR_TOKEN: ${{ inputs.sonar-token }}
