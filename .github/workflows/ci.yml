@@ -77,13 +77,22 @@ jobs:
 
       - name: Generate changelog
         if: steps.gitversion.outputs.preReleaseTag == ''
-        id: changelog
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
-          args: --latest --strip header
+          args: --tag v${{ steps.gitversion.outputs.majorMinorPatch }} --strip header
         env:
           OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
+
+      - name: Generate release notes
+        if: steps.gitversion.outputs.preReleaseTag == ''
+        uses: orhun/git-cliff-action@v4
+        id: release_notes
+        with:
+          config: cliff.toml
+          args: --tag v${{ steps.gitversion.outputs.majorMinorPatch }} --latest --strip all
+        env:
           GITHUB_REPO: ${{ github.repository }}
 
       - name: Commit changelog
@@ -101,4 +110,5 @@ jobs:
         with:
           tag_name: v${{ steps.gitversion.outputs.majorMinorPatch }}
           name: v${{ steps.gitversion.outputs.majorMinorPatch }}
-          body: ${{ steps.changelog.outputs.content }}
+          body: ${{ steps.release_notes.outputs.content }}
+          make_latest: true
