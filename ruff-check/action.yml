@@ -1,43 +1,44 @@
+---
 name: Ruff check
 description: Run ruff lint and format checks, upload JSON report on latest Python
 
 inputs:
-  python-version:
-    required: true
-    description: Current Python version (matrix)
-  latest-python:
-    required: true
-    description: Latest Python version (for conditional report upload)
-  config:
-    required: false
-    default: 'pyproject.toml'
-    description: Path to ruff config file
-  sources:
-    required: true
-    description: Space-separated source paths to check (e.g. 'src tests')
+    python-version:
+        required: true
+        description: Current Python version (matrix)
+    latest-python:
+        required: true
+        description: Latest Python version (for conditional report upload)
+    config:
+        required: false
+        default: 'pyproject.toml'
+        description: Path to ruff config file
+    sources:
+        required: true
+        description: Space-separated source paths to check (e.g. 'src tests')
 
 runs:
-  using: composite
-  steps:
-    - name: ruff — lint check
-      run: ruff check --config=${{ inputs.config }} ${{ inputs.sources }}
-      shell: bash
+    using: composite
+    steps:
+        - name: ruff — lint check
+          run: ruff check --config=${{ inputs.config }} ${{ inputs.sources }}
+          shell: bash
 
-    - name: ruff — format check
-      run: ruff format --check --config=${{ inputs.config }} ${{ inputs.sources }}
-      shell: bash
+        - name: ruff — format check
+          run: ruff format --check --config=${{ inputs.config }} ${{ inputs.sources }}
+          shell: bash
 
-    - name: ruff — produce JSON report
-      if: always() && inputs.python-version == inputs.latest-python
-      run: |
-        mkdir -p reports
-        ruff check --config=${{ inputs.config }} --output-format=json ${{ inputs.sources }} > reports/ruff.json || true
-        echo "ruff.json size: $(wc -c < reports/ruff.json) bytes"
-      shell: bash
+        - name: ruff — produce JSON report
+          if: always() && inputs.python-version == inputs.latest-python
+          run: |
+              mkdir -p reports
+              ruff check --config=${{ inputs.config }} --output-format=json ${{ inputs.sources }} > reports/ruff.json || true
+              echo "ruff.json size: $(wc -c < reports/ruff.json) bytes"
+          shell: bash
 
-    - name: Upload ruff report artifact
-      if: always() && inputs.python-version == inputs.latest-python
-      uses: actions/upload-artifact@v7
-      with:
-        name: ruff-report
-        path: reports/ruff.json
+        - name: Upload ruff report artifact
+          if: always() && inputs.python-version == inputs.latest-python
+          uses: actions/upload-artifact@v7
+          with:
+              name: ruff-report
+              path: reports/ruff.json

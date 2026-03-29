@@ -1,20 +1,21 @@
+---
 name: Install project
 description: Install a pip-based project with extras (pip install -e '.[extras]')
 
 inputs:
-  extras:
-    required: false
-    default: ''
-    description: Comma-separated extras to install (e.g. lint,test,dead_code)
+    extras:
+        required: false
+        default: ''
+        description: Comma-separated extras to install (e.g. lint,test,dead_code)
 
 runs:
-  using: composite
-  steps:
-    - name: Install package (${{ inputs.extras }})
-      run: |
-        if [ -n "${{ inputs.extras }}" ]; then
-          pip install -e '.[${{ inputs.extras }}]'
-        else
-          pip install -e .
-        fi
-      shell: bash
+    using: composite
+    steps:
+        - name: Install package (${{ inputs.extras }})
+          run: |
+              if [ -n "${{ inputs.extras }}" ]; then
+                pip install -e '.[${{ inputs.extras }}]'
+              else
+                pip install -e .
+              fi
+          shell: bash
