@@ -1,5 +1,9 @@
 # github-actions
 
+[![CI](https://github.com/chrysa/github-actions/actions/workflows/ci.yml/badge.svg)](https://github.com/chrysa/github-actions/actions/workflows/ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/chrysa/github-actions?sort=semver&label=release)](https://github.com/chrysa/github-actions/releases/latest)
+[![License](https://img.shields.io/github/license/chrysa/github-actions)](LICENSE)
+
 Shared composite GitHub Actions for `chrysa/*` repositories.
 
 ## Available actions
