@@ -63,8 +63,25 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@v4.4.2
 
+      - name: Debug GitVersion outputs
+        run: |
+          echo "semVer=${{ steps.gitversion.outputs.semVer }}"
+          echo "majorMinorPatch=${{ steps.gitversion.outputs.majorMinorPatch }}"
+          echo "preReleaseTag=${{ steps.gitversion.outputs.preReleaseTag }}"
+          echo "preReleaseLabelWithDash=${{ steps.gitversion.outputs.preReleaseLabelWithDash }}"
+
+      - name: Check if tag exists
+        id: tag_check
+        run: |
+          VERSION="v${{ steps.gitversion.outputs.majorMinorPatch }}"
+          if git rev-parse --quiet --verify "refs/tags/$VERSION" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Generate CHANGELOG.md
-        if: steps.gitversion.outputs.preReleaseTag == ''
+        if: steps.tag_check.outputs.exists == 'false'
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
@@ -74,7 +91,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
 
       - name: Generate release notes
-        if: steps.gitversion.outputs.preReleaseTag == ''
+        if: steps.tag_check.outputs.exists == 'false'
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
@@ -84,7 +101,7 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
 
       - name: Commit, tag and push
-        if: steps.gitversion.outputs.preReleaseTag == ''
+        if: steps.tag_check.outputs.exists == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -98,7 +115,7 @@ jobs:
           git push origin "$MAJOR" --force
 
       - name: Create GitHub Release
-        if: steps.gitversion.outputs.preReleaseTag == ''
+        if: steps.tag_check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.gitversion.outputs.majorMinorPatch }}
