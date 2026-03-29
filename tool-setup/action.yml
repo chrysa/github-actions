@@ -1,24 +1,25 @@
+---
 name: Tool setup
 description: Python environment + project install (python-setup + install-project)
 
 inputs:
-  python-version:
-    required: true
-    description: Python version to set up
-  extras:
-    required: false
-    default: ''
-    description: Comma-separated pip extras from setup.cfg (e.g. lint,format_dockerfile,yaml)
+    python-version:
+        required: true
+        description: Python version to set up
+    extras:
+        required: false
+        default: ''
+        description: Comma-separated pip extras from setup.cfg (e.g. lint,format_dockerfile,yaml)
 
 runs:
-  using: composite
-  steps:
-    - name: Setup Python environment
-      uses: chrysa/github-actions/python-setup@main
-      with:
-        python-version: ${{ inputs.python-version }}
+    using: composite
+    steps:
+        - name: Setup Python environment
+          uses: chrysa/github-actions/python-setup@main
+          with:
+              python-version: ${{ inputs.python-version }}
 
-    - name: Install project dependencies
-      uses: chrysa/github-actions/install-project@main
-      with:
-        extras: ${{ inputs.extras }}
+        - name: Install project dependencies
+          uses: chrysa/github-actions/install-project@main
+          with:
+              extras: ${{ inputs.extras }}
