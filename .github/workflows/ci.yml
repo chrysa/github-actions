@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - feature/**
+      - fix/**
+      - release/**
+  workflow_dispatch:
+
+permissions:
+  checks: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  validate:
+    name: Validate actions YAML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check all action.yml files are valid YAML
+        run: |
+          python3 -c "
+          import yaml, pathlib, sys
+          errors = []
+          for f in sorted(pathlib.Path('.').glob('*/action.yml')):
+              try:
+                  data = yaml.safe_load(f.read_text())
+                  has_runs = 'runs' in (data or {})
+                  name = (data or {}).get('name', 'MISSING')
+                  status = 'OK' if has_runs else 'ERR'
+                  print(f'{status}  {f}  name={name!r}')
+                  if not has_runs:
+                      errors.append(str(f))
+              except yaml.YAMLError as e:
+                  print(f'ERR  {f}: {e}')
+                  errors.append(str(f))
+          sys.exit(len(errors))
+          "
+
+  release:
+    name: Tag release
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v4.4.2
+        with:
+          versionSpec: 6.x
+
+      - name: Determine version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.4.2
+
+      - name: Create and push version tag
+        if: steps.gitversion.outputs.preReleaseTag == ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          VERSION="v${{ steps.gitversion.outputs.majorMinorPatch }}"
+          MAJOR="v${{ steps.gitversion.outputs.major }}"
+          git tag -a "$VERSION" -m "Release $VERSION" || echo "Tag $VERSION already exists"
+          git push origin "$VERSION" || echo "Tag $VERSION already pushed"
+          git tag -fa "$MAJOR" -m "Latest v${{ steps.gitversion.outputs.major }}"
+          git push origin "$MAJOR" --force
+
+      - name: Create GitHub Release
+        if: steps.gitversion.outputs.preReleaseTag == ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.gitversion.outputs.majorMinorPatch }}
+          name: v${{ steps.gitversion.outputs.majorMinorPatch }}
+          generate_release_notes: true
