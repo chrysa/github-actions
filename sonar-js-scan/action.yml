@@ -22,10 +22,18 @@ inputs:
         required: false
         default: 'src'
         description: Comma-separated source directories to analyze
+    tests:
+        required: false
+        default: 'tests'
+        description: Comma-separated test directories (excluded from analysis)
     js-file-suffixes:
         required: false
         default: '.js,.gs,.ts,.jsx,.tsx'
         description: Comma-separated file suffixes recognized as JavaScript/TypeScript
+    coverage-report-paths:
+        required: false
+        default: ''
+        description: Comma-separated paths to LCOV coverage reports (e.g. coverage/lcov.info)
 
 runs:
     using: composite
@@ -38,9 +46,11 @@ runs:
                   -Dsonar.organization=${{ inputs.organization }}
                   -Dsonar.projectName=${{ inputs.project-name }}
                   -Dsonar.sources=${{ inputs.sources }}
+                  -Dsonar.tests=${{ inputs.tests }}
                   -Dsonar.sourceEncoding=UTF-8
                   -Dsonar.javascript.file.suffixes=${{ inputs.js-file-suffixes }}
                   -Dsonar.exclusions=node_modules/**,**/.git/**,**/__pycache__/**
+                  ${{ inputs.coverage-report-paths != '' && format('-Dsonar.javascript.lcov.reportPaths={0}', inputs.coverage-report-paths) || '' }}
           env:
               GITHUB_TOKEN: ${{ inputs.github-token }}
               SONAR_TOKEN: ${{ inputs.sonar-token }}
