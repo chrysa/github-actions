@@ -1,0 +1,58 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+**/__pycache__/
+*.py[cod]
+*.py,cover
+*.cover
+*.coverage*
+.coverage
+.coverage.*
+htmlcov/
+
+# Egg / build / dist
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# ── Tools ─────────────────────────────────────────────────────────────────────
+.ruff_cache/
+**/.*cache*/
+.mypy_cache/
+.pytest_cache/
+.trunk/
+
+# ── Editors / OS ──────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Environment & secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+secrets.yaml
+
+# ── Docker runtime ────────────────────────────────────────────────────────────
+docker/entrypoints/bootstraped
+
+# ── Generated output ──────────────────────────────────────────────────────────
+out/
+reports/
+guidelines_report.html
+
+# ── TypeScript / Node ─────────────────────────────────────────────────────────
+node_modules/
+*.tsbuildinfo
+
+# ── CI / misc ─────────────────────────────────────────────────────────────────
+.git-branches.toml
+.claude/
+.secrets.baseline
+scout_apm_debug.log
