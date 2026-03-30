@@ -1,10 +1,17 @@
 # Changelog
 
+## [1.0.7] - 2026-03-30
+
+### Bug Fixes
+
+- Fix(pre-commit): update hook revisions to stable tags (#8) ([`cd2171a`](cd2171a47b16107887a2aaad9eeed5c667716ecc))
+
 ## [1.0.6] - 2026-03-30
 
 ### Miscellaneous
 
 - Chore: add gitignore, copilot-instructions, instruction files (#7) ([`03b4d11`](03b4d110b7787d8fe6ea60257719e3dff71c0695))
+- Chore: update CHANGELOG.md for v1.0.6 [skip ci] ([`2cfca96`](2cfca96b87eb1cc9633769d4a08b4cdbcc7092bd))
 
 ## [1.0.5] - 2026-03-30
 
