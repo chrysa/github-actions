@@ -1,10 +1,28 @@
 # Changelog
 
+## [1.0.8] - 2026-03-30
+
+### Miscellaneous
+
+- Chore: standardize repo configuration (#9)
+
+* chore: standardize repo configuration
+
+- chore: fix dependabot limits
+
+* chore: add standard Makefile
+
+* chore: update pre-commit hooks to latest versions ([`a6906ad`](a6906ad7fd86ae205084e4d01ab77bce781ddac1))
+
 ## [1.0.7] - 2026-03-30
 
 ### Bug Fixes
 
 - Fix(pre-commit): update hook revisions to stable tags (#8) ([`cd2171a`](cd2171a47b16107887a2aaad9eeed5c667716ecc))
+
+### Miscellaneous
+
+- Chore: update CHANGELOG.md for v1.0.7 [skip ci] ([`fec4701`](fec470154f8f784656e9d8fbe19dd78e41b77d8d))
 
 ## [1.0.6] - 2026-03-30
 
