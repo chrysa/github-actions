@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.6] - 2026-03-30
+
+### Miscellaneous
+
+- Chore: add gitignore, copilot-instructions, instruction files (#7) ([`03b4d11`](03b4d110b7787d8fe6ea60257719e3dff71c0695))
+
 ## [1.0.5] - 2026-03-30
 
 ### Miscellaneous
@@ -7,6 +13,7 @@
 - Chore: add Copilot instructions file (#5)
 
 Co-authored-by: anthony-greau <anthony.greau@padam.io> ([`e4a173b`](e4a173be84a9502e4a1174bb122fc58e96d71f03))
+- Chore: update CHANGELOG.md for v1.0.5 [skip ci] ([`2166540`](2166540f045379b10146536a17e8d22b116c8370))
 
 ## [1.0.4] - 2026-03-29
 
