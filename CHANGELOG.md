@@ -1,10 +1,28 @@
 # Changelog
 
+## [1.0.5] - 2026-03-30
+
+### Miscellaneous
+
+- Chore: add Copilot instructions file (#5)
+
+Co-authored-by: anthony-greau <anthony.greau@padam.io> ([`e4a173b`](e4a173be84a9502e4a1174bb122fc58e96d71f03))
+
+## [1.0.4] - 2026-03-29
+
+### Miscellaneous
+
+- Chore: uniformize YAML syntax to match padam-av style (--- header, 4-space indent, timeout-minutes, shell: bash) ([`e05adfd`](e05adfd7981446417bbf0fdd905f1af232e19daa))
+
 ## [1.0.3] - 2026-03-29
 
 ### Documentation
 
 - Docs: add CI, release and license badges to README ([`87a8f4f`](87a8f4fd2b22a51dad7fb7848de3a91b0c3db1aa))
+
+### Miscellaneous
+
+- Chore: update CHANGELOG.md for v1.0.3 [skip ci] ([`5ef783d`](5ef783dc8ce27f80d6ee28481765b5b49f81b6d6))
 
 ## [1.0.2] - 2026-03-29
 
