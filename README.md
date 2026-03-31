@@ -16,7 +16,8 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/ruff-check@main` | ruff lint + format + JSON report |
 | `chrysa/github-actions/mypy-check@main` | mypy type check + txt report |
 | `chrysa/github-actions/run-tests@main` | pytest + coverage + Codecov |
-| `chrysa/github-actions/sonar-scan@main` | SonarCloud scan |
+| `chrysa/github-actions/sonar-scan@main` | SonarCloud scan (Python) |
+| `chrysa/github-actions/sonar-scan-node@main` | SonarCloud scan (Node.js / TypeScript) |
 
 ## Usage
 

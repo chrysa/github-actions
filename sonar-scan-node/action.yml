@@ -1,0 +1,58 @@
+---
+name: SonarCloud scan (Node.js / TypeScript)
+description: Run SonarCloud scan for JavaScript / TypeScript projects
+
+inputs:
+    sonar-token:
+        required: true
+        description: SonarCloud token
+    github-token:
+        required: true
+        description: GitHub token
+    project-key:
+        required: true
+        description: SonarCloud project key (e.g. MyOrg_my-project)
+    organization:
+        required: true
+        description: SonarCloud organization slug
+    project-name:
+        required: true
+        description: SonarCloud project display name
+    sources:
+        required: false
+        default: 'src'
+        description: Source directory
+    tsconfig:
+        required: false
+        default: 'tsconfig.json'
+        description: Path to tsconfig.json for TypeScript analysis
+
+runs:
+    using: composite
+    steps:
+        - name: Download coverage artifact
+          uses: actions/download-artifact@v8
+          with:
+              name: coverage-lcov
+              path: coverage/
+          continue-on-error: true
+
+        - name: List reports available for SonarCloud
+          run: ls -lh coverage/ || echo "coverage/ directory is empty or missing"
+          shell: bash
+
+        - name: SonarCloud Scan
+          uses: SonarSource/sonarqube-scan-action@v5
+          with:
+              args: >
+                  -Dsonar.projectKey=${{ inputs.project-key }}
+                  -Dsonar.organization=${{ inputs.organization }}
+                  -Dsonar.projectName=${{ inputs.project-name }}
+                  -Dsonar.sourceEncoding=UTF-8
+                  -Dsonar.sources=${{ inputs.sources }}
+                  -Dsonar.typescript.tsconfigPath=${{ inputs.tsconfig }}
+                  -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                  -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/public/**
+          env:
+              GITHUB_TOKEN: ${{ inputs.github-token }}
+              SONAR_TOKEN: ${{ inputs.sonar-token }}
