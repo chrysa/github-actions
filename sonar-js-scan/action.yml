@@ -1,0 +1,57 @@
+---
+name: SonarCloud scan (JavaScript/TypeScript)
+description: Download LCOV coverage report and run SonarCloud scan for JS/TS projects
+
+inputs:
+    sonar-token:
+        required: true
+        description: SonarCloud token
+    github-token:
+        required: true
+        description: GitHub token
+    project-key:
+        required: true
+        description: SonarCloud project key (e.g. chrysa_my-project)
+    organization:
+        required: true
+        description: SonarCloud organization slug
+    project-name:
+        required: true
+        description: SonarCloud project display name
+    sources:
+        required: false
+        default: 'src'
+        description: Comma-separated source directories
+    lcov-report-path:
+        required: false
+        default: 'coverage/lcov.info'
+        description: Path to the LCOV coverage report (relative to repo root)
+
+runs:
+    using: composite
+    steps:
+        - name: Download LCOV coverage report
+          uses: actions/download-artifact@v4
+          with:
+              name: coverage-report
+              path: reports/
+          continue-on-error: true
+
+        - name: List reports available for SonarCloud
+          run: ls -lh reports/ || echo "reports/ directory is empty or missing"
+          shell: bash
+
+        - name: SonarCloud Scan
+          uses: SonarSource/sonarqube-scan-action@v5
+          with:
+              args: >
+                  -Dsonar.projectKey=${{ inputs.project-key }}
+                  -Dsonar.organization=${{ inputs.organization }}
+                  -Dsonar.projectName=${{ inputs.project-name }}
+                  -Dsonar.sourceEncoding=UTF-8
+                  -Dsonar.sources=${{ inputs.sources }}
+                  -Dsonar.javascript.lcov.reportPaths=${{ inputs.lcov-report-path }}
+                  -Dsonar.exclusions=**/node_modules/**,**/.git/**,**/dist/**,**/build/**
+          env:
+              GITHUB_TOKEN: ${{ inputs.github-token }}
+              SONAR_TOKEN: ${{ inputs.sonar-token }}
