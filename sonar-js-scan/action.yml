@@ -1,6 +1,6 @@
 ---
 name: SonarCloud JS/GAS scan
-description: Run SonarCloud scan for JavaScript / Google Apps Script projects
+description: Run SonarCloud scan for JavaScript / Google Apps Script projects, with optional artifact download
 
 inputs:
     sonar-token:
@@ -34,10 +34,30 @@ inputs:
         required: false
         default: ''
         description: Comma-separated paths to LCOV coverage reports (e.g. coverage/lcov.info)
+    artifact-name:
+        required: false
+        default: ''
+        description: >
+            Name of a GitHub Actions artifact to download before the scan.
+            Leave empty to skip artifact download. The artifact is extracted
+            into the path defined by artifact-path.
+    artifact-path:
+        required: false
+        default: 'reports/'
+        description: >
+            Local path where the artifact will be extracted.
+            Only used when artifact-name is set.
 
 runs:
     using: composite
     steps:
+        - name: Download coverage artifact (optional)
+          if: ${{ inputs.artifact-name != '' }}
+          uses: actions/download-artifact@v4
+          with:
+              name: ${{ inputs.artifact-name }}
+              path: ${{ inputs.artifact-path }}
+
         - name: SonarCloud scan
           uses: SonarSource/sonarqube-scan-action@v5
           with:
