@@ -1,5 +1,6 @@
 # github-actions
 
+> @[claude-sonnet-4-6]
 ## Project Overview
 Reusable GitHub Actions for all chrysa repositories. Provides gitversion, python-setup, ruff-check, sonar-scan, sonar-scan-node, run-tests, tool-setup, install-project actions.
 
