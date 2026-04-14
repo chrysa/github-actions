@@ -1,0 +1,60 @@
+---
+name: Publish Python package
+description: Build and publish a Python package to PyPI using hatch or setuptools
+
+inputs:
+    pypi-token:
+        required: true
+        description: PyPI API token for authentication
+    build-backend:
+        required: false
+        default: 'hatch'
+        description: Build backend to use (hatch or setuptools)
+    python-version:
+        required: false
+        default: '3.14'
+        description: Python version for build environment
+    repository-url:
+        required: false
+        default: 'https://upload.pypi.org/legacy/'
+        description: PyPI repository URL (use https://test.pypi.org/legacy/ for TestPyPI)
+
+runs:
+    using: composite
+    steps:
+        - name: Set up Python
+          uses: actions/setup-python@v6
+          with:
+              python-version: ${{ inputs.python-version }}
+
+        - name: Install build tools (hatch)
+          if: inputs.build-backend == 'hatch'
+          run: pip install --upgrade hatch twine
+          shell: bash
+
+        - name: Install build tools (setuptools)
+          if: inputs.build-backend == 'setuptools'
+          run: pip install --upgrade build twine
+          shell: bash
+
+        - name: Build package (hatch)
+          if: inputs.build-backend == 'hatch'
+          run: hatch build
+          shell: bash
+
+        - name: Build package (setuptools)
+          if: inputs.build-backend == 'setuptools'
+          run: python -m build
+          shell: bash
+
+        - name: Check package with twine
+          run: twine check dist/*
+          shell: bash
+
+        - name: Publish to PyPI
+          run: twine upload dist/*
+          shell: bash
+          env:
+              TWINE_USERNAME: __token__
+              TWINE_PASSWORD: ${{ inputs.pypi-token }}
+              TWINE_REPOSITORY_URL: ${{ inputs.repository-url }}
