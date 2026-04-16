@@ -1,0 +1,95 @@
+---
+# Standard labels for chrysa/* repositories
+# Source of truth — synced via .github/workflows/sync-labels.yml
+# Reference: issue #20 §4 — labels standardisation
+
+# Type
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+- name: enhancement
+  color: a2eeef
+  description: New feature or request
+- name: feature
+  color: 0e8a16
+  description: New product capability
+- name: chore
+  color: cccccc
+  description: Maintenance, refactor, internal cleanup
+- name: docs
+  color: 0075ca
+  description: Documentation only
+- name: ci
+  color: 1d76db
+  description: CI/CD pipelines, workflows, automation
+- name: security
+  color: ee0701
+  description: Security vulnerability or hardening
+- name: dependencies
+  color: 0366d6
+  description: Dependency updates (Dependabot)
+
+# State
+- name: blocked
+  color: b60205
+  description: Blocked by another issue or external constraint
+- name: needs-review
+  color: fbca04
+  description: Awaiting review from a maintainer
+- name: needs-discussion
+  color: f9d0c4
+  description: Requires discussion before implementation
+- name: in-progress
+  color: 5319e7
+  description: Actively being worked on
+- name: dependent
+  color: 0e8a16
+  description: This PR depends on another PR
+
+# Priority
+- name: priority-critical
+  color: b60205
+  description: Critical priority — fix immediately
+- name: priority-high
+  color: d93f0b
+  description: High priority
+- name: priority-normal
+  color: fbca04
+  description: Normal priority
+- name: priority-low
+  color: c2e0c6
+  description: Low priority
+
+# Scope (chrysa ecosystem)
+- name: scope/ci
+  color: 1d76db
+  description: CI/CD scope
+- name: scope/release
+  color: 5319e7
+  description: Release/versioning scope
+- name: scope/sonar
+  color: 0e8a16
+  description: SonarCloud quality scope
+- name: scope/docs
+  color: 0075ca
+  description: Documentation scope
+
+# Status
+- name: wontfix
+  color: ffffff
+  description: This will not be worked on
+- name: duplicate
+  color: cfd3d7
+  description: This issue or pull request already exists
+- name: invalid
+  color: e4e669
+  description: This doesn't seem right
+- name: question
+  color: d876e3
+  description: Further information is requested
+- name: good-first-issue
+  color: 7057ff
+  description: Good for newcomers
+- name: help-wanted
+  color: 008672
+  description: Extra attention is needed

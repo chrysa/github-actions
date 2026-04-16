@@ -13,6 +13,7 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/python-setup@main` | Set up Python + upgrade pip |
 | `chrysa/github-actions/install-project@main` | `pip install -e '.[extras]'` |
 | `chrysa/github-actions/tool-setup@main` | python-setup + install-project |
+| `chrysa/github-actions/setup-node@main` | Set up Node.js + cache + install deps |
 | `chrysa/github-actions/gitversion@main` | Compute semver from git history |
 | `chrysa/github-actions/ruff-check@main` | ruff lint + format + JSON report |
 | `chrysa/github-actions/mypy-check@main` | mypy type check + txt report |
@@ -58,6 +59,36 @@ Combined Python setup + project install (wraps python-setup + install-project).
   with:
     python-version: '3.14'
     extras: 'lint,test'
+```
+
+### setup-node
+
+Set up Node.js with package manager cache and optional dependency install.
+
+```yaml
+# Minimal (npm + npm ci)
+- uses: chrysa/github-actions/setup-node@main
+  with:
+    node-version: '22'
+
+# With pnpm
+- uses: chrysa/github-actions/setup-node@main
+  with:
+    node-version: '22'
+    package-manager: 'pnpm'
+
+# Setup only (skip install)
+- uses: chrysa/github-actions/setup-node@main
+  with:
+    node-version: '22'
+    install: 'false'
+
+# Custom install command
+- uses: chrysa/github-actions/setup-node@main
+  with:
+    node-version: '22'
+    package-manager: 'yarn'
+    install-command: 'yarn install --immutable'
 ```
 
 ### gitversion
