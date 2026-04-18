@@ -1,73 +1,67 @@
-# github-actions — Copilot Instructions
+# github-actions — GitHub Copilot Instructions
 
-## MANDATORY: Read Instructions Before Any Task
+## Mandatory Workflow
 
-Before working on actions, tests, or CI, read relevant instruction files.
+1. Read `.github/instructions/*.instructions.md` when present.
+2. Read `CLAUDE.md` for repository context.
+3. Follow repository-local conventions before writing code.
 
-## Project Overview
+## Project Context
 
-Reusable GitHub Actions composite actions for the `chrysa` organization.
-Referenced as `chrysa/github-actions@v1` across all chrysa repositories.
+**Stack:** Mixed / to document
+**Purpose:** [![CI](https://github.com/chrysa/github-actions/actions/workflows/ci.yml/badge.svg)](https://github.com/chrysa/github-actions/actions/workflows/ci.yml).
 
-## Available Actions
+## Engineering Rules
 
-| Action | Purpose |
-|---|---|
-| `tool-setup` | Install Python + dependencies via pip |
-| `python-setup` | Setup Python version |
-| `ruff-check` | Run ruff linter + formatter check |
-| `mypy-check` | Run mypy type checker |
-| `run-tests` | Run pytest with coverage |
-| `sonar-scan` | SonarCloud analysis for Python |
-| `sonar-js-scan` | SonarCloud analysis for JS/TS |
-| `gitversion` | Compute semantic version via GitVersion |
-| `install-project` | Install project with extras |
+- Write in English: code, comments, docs, issues, PRs and commits.
+- Keep changes minimal and aligned with the existing style.
+- Do not add unrelated refactors or speculative improvements.
+- Prefer make targets when available instead of invoking tooling ad hoc.
+- Never commit secrets, credentials or environment-specific values.
 
-## Architecture
+## Automation & Industrialization (NON-NEGOTIABLE)
 
-```
-<action-name>/
-    action.yml      # composite action definition
-```
+- Projects must be **maximally automated and industrialized**.
+- Every repetitive task must be covered by one of: CI/CD pipeline, Makefile target, pre-commit hook, GitHub Actions workflow, or a bot/script.
+- Required automation baseline for any project:
+  - **CI/CD**: automated lint, type-check, tests, build on every push/PR.
+  - **Formatting**: auto-applied via pre-commit or CI (no manual `ruff`/`prettier` runs).
+  - **Releases**: automated versioning and changelog generation (e.g. `cliff`, `semantic-release`).
+  - **Dependency updates**: automated via Dependabot or Renovate.
+  - **Secret scanning**: automated on every commit (pre-commit hook + CI step).
+- When proposing or implementing a feature, always include the automation layer (tests, CI step, Makefile target) — not just the code.
+- Any manual step that could be automated is considered **technical debt** and must be tracked.
 
-## Key Constraints
+## Canonical Templates & Shared Tooling
 
-- **Always use `@v1`** when referencing this repo (never `@main`)
-- **Semantic versioning** — tag releases as `v1`, `v1.0.0`, etc.
-- **Backward compatible** — breaking changes need a new major version
-- All action inputs must have descriptions
-- Test actions in isolation before merging
+### React applications
+- All new React apps **must** be bootstrapped from `Forge-Stack-Workshop/react-app-generator`.
+- Never scaffold from scratch or from `create-react-app`/`vite` directly.
 
-## Tagging Strategy
+### Makefiles
+- All project Makefiles **must** extend or be derived from `Forge-Stack-Workshop/base-makefile`.
+- Do not duplicate targets that already exist in the base — inherit instead.
 
-```bash
-git tag -fa v1 -m "Update v1 tag"
-git push origin v1 --force
-```
+### Pre-commit hooks
+- If a required hook is missing from `chrysa/pre-commit-tools`, **open an issue** on that repo describing the hook needed before proceeding.
+- In the requesting repo, open a matching issue/PR and mark it as dependent (`Depends on chrysa/pre-commit-tools#<N>`).
+- Do not implement a workaround locally — wait for the hook to land in the shared repo.
 
-## Execution Standard Compliance
+### Issue resolution automation (desired workflow)
+- When a blocking issue is opened (e.g. missing hook, missing template), an agent should:
+  1. Analyse the issue and propose a solution on the upstream repo.
+  2. Once the solution is validated (human approval), automatically unblock the dependent issue/PR in the requesting repo.
+- This workflow is aspirational — track automation gaps as issues on the relevant repos.
 
-All chrysa CI workflows that call these actions must enforce the requirements in
-`chrysa/shared-standards/EXECUTION_STANDARD.md`.
+## Claude Interoperability
 
-### What CI must run (§5)
+- This repository is also prepared for Claude Code via `.claude/` and `CLAUDE.md`.
+- Claude skills are available under `.claude/skills/` for relevant tasks.
+- If a task has repository instructions, those instructions override generic defaults.
 
-Every `ci-*.yml` pipeline must execute in order:
+## Quality Thresholds
 
-| Step | Action | Requirement |
-|------|--------|-------------|
-| 1 | lint | `ruff-check@v1` or equivalent — must pass |
-| 2 | typecheck | `mypy-check@v1` — must pass for typed projects |
-| 3 | test-cov | `run-tests@v1` — generates `coverage.xml`, ≥ 80% line coverage |
-| 4 | analysis | `sonar-scan@v1` or `sonar-js-scan@v1` after tests |
-
-### Testing requirements (§4)
-
-- Minimum **80% line coverage** — fail the job if below threshold
-- Coverage artifact uploaded as `coverage.xml` on every CI run
-- Test names: `test_<unit>_when_<condition>_should_<expected>`
-
-### Makefile contract (§1)
-
-Callers are expected to expose `make lint`, `make typecheck`, `make test-cov` as entry points.
-Actions may call these Makefile targets or invoke tools directly — both are valid.
+- Max function length: 50 lines when practical.
+- Max file length: 500 lines when practical.
+- Max cyclomatic complexity: 10.
+- Lint warnings target: 0.
