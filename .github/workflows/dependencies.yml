@@ -2,6 +2,7 @@
 name: PR Dependency Check
 
 on:
+    workflow_call:
     pull_request_target:
         types: [closed, edited, opened, reopened]
 
