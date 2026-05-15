@@ -1,6 +1,8 @@
 # github-actions
 
 > @[claude-sonnet-4-6]
+
+> **Claude Code**: also read `.github/copilot-instructions.md` and `.github/instructions/*.instructions.md` for code specifications.
 ## Project Overview
 Reusable GitHub Actions for all chrysa repositories. Provides gitversion, python-setup, ruff-check, sonar-scan, sonar-scan-node, run-tests, tool-setup, install-project actions.
 
