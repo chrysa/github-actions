@@ -1,0 +1,21 @@
+---
+name: Sync GitHub Labels
+
+on:
+    workflow_call:
+
+permissions:
+    contents: read
+    issues: write
+
+jobs:
+    sync-labels:
+        name: Synchronize labels
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+            - name: Sync labels
+              uses: marocchino/create-labels@v1.3.0
+              with:
+                  labels: .github/labels.yml

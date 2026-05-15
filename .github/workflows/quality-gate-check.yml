@@ -1,0 +1,44 @@
+---
+name: Quality Gate Check
+
+on:
+    workflow_call:
+
+permissions:
+    checks: write
+    contents: read
+    statuses: write
+
+jobs:
+    quality-gate:
+        name: No-Regression Quality Gates
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+            - name: Set up Python
+              uses: actions/setup-python@v6
+              with:
+                  python-version: '3.14'
+            - name: Set up Node.js (if needed)
+              continue-on-error: true
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '20'
+                  cache: npm
+            - name: Install dependencies
+              run: |
+                  if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+                  if [ -f package.json ]; then npm ci; fi
+            - name: Run quality gate verification
+              id: quality-gate
+              run: make quality-gate-verify || exit_code=$?; exit ${exit_code:-0}
+            - name: Report quality gate status
+              if: always()
+              run: |
+                  if [ "${{ steps.quality-gate.outcome }}" == 'success' ]; then
+                    echo "✅ All quality gates passed"
+                  else
+                    echo "❌ Quality gate regression detected"
+                    exit 1
+                  fi
