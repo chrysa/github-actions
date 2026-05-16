@@ -46,6 +46,10 @@ dev: ## No-op for composite actions repo
 
 test: validate ## Run action validation (alias → validate)
 
+docker-test: ## Validate GitHub Actions in Docker (CI-compatible)
+	docker run --rm -v $(PWD):/work -w /work python:3.14-slim sh -c \
+		"pip install --quiet action-validator && action-validator ."
+
 test-cov: validate ## Run action validation (no coverage for actions repo)
 
 lint: validate ## Lint composite actions (alias → validate)
