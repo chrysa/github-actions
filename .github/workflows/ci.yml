@@ -16,7 +16,6 @@ on:
 permissions: {}
 
 jobs:
-
     pre-commit:
         name: Pre-commit checks
         runs-on: ubuntu-latest
@@ -28,7 +27,7 @@ jobs:
 
             - uses: actions/setup-python@v6
               with:
-                  python-version: '3.14'
+                  python-version: "3.14"
                   cache: pip
 
             - uses: pre-commit/action@v3.0.1
