@@ -21,18 +21,27 @@ runs:
     using: composite
     steps:
         - name: ruff — lint check
-          run: ruff check --config=${{ inputs.config }} ${{ inputs.sources }}
+          env:
+              RUFF_CONFIG: ${{ inputs.config }}
+              RUFF_SOURCES: ${{ inputs.sources }}
+          run: ruff check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
           shell: bash
 
         - name: ruff — format check
-          run: ruff format --check --config=${{ inputs.config }} ${{ inputs.sources }}
+          env:
+              RUFF_CONFIG: ${{ inputs.config }}
+              RUFF_SOURCES: ${{ inputs.sources }}
+          run: ruff format --check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
           shell: bash
 
         - name: ruff — produce JSON report
           if: always() && inputs.python-version == inputs.latest-python
+          env:
+              RUFF_CONFIG: ${{ inputs.config }}
+              RUFF_SOURCES: ${{ inputs.sources }}
           run: |
               mkdir -p reports
-              ruff check --config=${{ inputs.config }} --output-format=json ${{ inputs.sources }} > reports/ruff.json || true
+              ruff check --config="${RUFF_CONFIG}" --output-format=json ${RUFF_SOURCES} > reports/ruff.json || true
               echo "ruff.json size: $(wc -c < reports/ruff.json) bytes"
           shell: bash
 

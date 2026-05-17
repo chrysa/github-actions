@@ -21,14 +21,20 @@ runs:
     using: composite
     steps:
         - name: mypy — type check
-          run: mypy --config-file=${{ inputs.config-file }} ${{ inputs.sources }}
+          env:
+              MYPY_CONFIG: ${{ inputs.config-file }}
+              MYPY_SOURCES: ${{ inputs.sources }}
+          run: mypy --config-file="${MYPY_CONFIG}" ${MYPY_SOURCES}
           shell: bash
 
         - name: mypy — produce text report
           if: always() && inputs.python-version == inputs.latest-python
+          env:
+              MYPY_CONFIG: ${{ inputs.config-file }}
+              MYPY_SOURCES: ${{ inputs.sources }}
           run: |
               mkdir -p reports
-              mypy --config-file=${{ inputs.config-file }} --no-error-summary ${{ inputs.sources }} > reports/mypy.txt 2>&1 || true
+              mypy --config-file="${MYPY_CONFIG}" --no-error-summary ${MYPY_SOURCES} > reports/mypy.txt 2>&1 || true
               echo "mypy.txt size: $(wc -c < reports/mypy.txt) bytes"
           shell: bash
 
