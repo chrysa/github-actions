@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --only-binary :all: --upgrade pip
-          pip install --no-build-isolation -e ".[dev]" mutmut
+          pip install -e ".[dev]" mutmut
 
       - name: Run mutmut
         id: mutmut
@@ -71,8 +71,8 @@ jobs:
       - name: Fail if score below threshold
         env:
           THRESHOLD: ${{ inputs.threshold }}
+          SCORE: ${{ steps.score.outputs.score }}
         run: |
-          SCORE=${{ steps.score.outputs.score }}
           echo "Mutation score: ${SCORE}% (threshold: ${THRESHOLD}%)"  
           if [ "$SCORE" -lt "$THRESHOLD" ]; then
             echo "❌ Mutation score ${SCORE}% is below threshold ${THRESHOLD}%"
