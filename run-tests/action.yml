@@ -12,6 +12,10 @@ inputs:
     cov-module:
         required: true
         description: Python module name to measure coverage for (e.g. pre_commit_hooks)
+    working-directory:
+        required: false
+        default: '.'
+        description: Working directory to run pytest from (e.g. backend for monorepos)
 
 runs:
     using: composite
@@ -19,6 +23,7 @@ runs:
         - name: Run test suite
           env:
               COV_MODULE: ${{ inputs.cov-module }}
+          working-directory: ${{ inputs.working-directory }}
           run: |
               mkdir -p reports
               pytest \
@@ -35,13 +40,13 @@ runs:
           uses: actions/upload-artifact@v7
           with:
               name: test-results-${{ inputs.python-version }}
-              path: reports/
+              path: ${{ inputs.working-directory }}/reports/
 
         - name: Publish test results to PR
           if: always() && inputs.python-version == inputs.latest-python
           uses: EnricoMi/publish-unit-test-result-action@v2
           with:
-              files: reports/junit.xml
+              files: ${{ inputs.working-directory }}/reports/junit.xml
               comment_title: Test Results
               check_name: pytest
 
@@ -49,5 +54,5 @@ runs:
           if: inputs.python-version == inputs.latest-python
           uses: codecov/codecov-action@v6
           with:
-              files: reports/coverage.xml
+              files: ${{ inputs.working-directory }}/reports/coverage.xml
               fail_ci_if_error: false
