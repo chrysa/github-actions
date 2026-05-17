@@ -17,10 +17,12 @@ runs:
     using: composite
     steps:
         - name: Run test suite
+          env:
+              COV_MODULE: ${{ inputs.cov-module }}
           run: |
               mkdir -p reports
               pytest \
-                --cov=${{ inputs.cov-module }} \
+                --cov="${COV_MODULE}" \
                 --cov-branch \
                 --cov-report=xml:reports/coverage.xml \
                 --cov-report=term-missing \

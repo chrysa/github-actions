@@ -37,9 +37,11 @@ jobs:
 
             - name: Run mutmut
               id: mutmut
+              env:
+                  MUTMUT_PATHS: ${{ inputs.paths }}
               run: |
                   mutmut run \
-                    --paths-to-mutate "${{ inputs.paths }}" \
+                    --paths-to-mutate "${MUTMUT_PATHS}" \
                     --runner "python -m pytest tests/ -x -q --no-header" \
                     --no-progress \
                     || true
@@ -67,10 +69,11 @@ jobs:
               run: mutmut results || true
 
             - name: Fail if score below threshold
+              env:
+                  THRESHOLD: ${{ inputs.threshold }}
               run: |
                   SCORE=${{ steps.score.outputs.score }}
-                  THRESHOLD=${{ inputs.threshold }}
-                  echo "Mutation score: ${SCORE}% (threshold: ${THRESHOLD}%)"
+                  echo "Mutation score: ${SCORE}% (threshold: ${THRESHOLD}%)"  
                   if [ "$SCORE" -lt "$THRESHOLD" ]; then
                     echo "❌ Mutation score ${SCORE}% is below threshold ${THRESHOLD}%"
                     exit 1
