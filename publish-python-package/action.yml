@@ -29,12 +29,12 @@ runs:
 
         - name: Install build tools (hatch)
           if: inputs.build-backend == 'hatch'
-          run: pip install --upgrade hatch twine
+          run: pip install --only-binary :all: --upgrade hatch twine
           shell: bash
 
         - name: Install build tools (setuptools)
           if: inputs.build-backend == 'setuptools'
-          run: pip install --upgrade build twine
+          run: pip install --only-binary :all: --upgrade build twine
           shell: bash
 
         - name: Build package (hatch)
