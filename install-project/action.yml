@@ -11,10 +11,12 @@ inputs:
 runs:
     using: composite
     steps:
-        - name: Install package (${{ inputs.extras }})
+        - name: Install package
+          env:
+              EXTRAS: ${{ inputs.extras }}
           run: |
-              if [ -n "${{ inputs.extras }}" ]; then
-                pip install -e '.[${{ inputs.extras }}]'
+              if [ -n "${EXTRAS}" ]; then
+                pip install -e ".[${EXTRAS}]"
               else
                 pip install -e .
               fi
