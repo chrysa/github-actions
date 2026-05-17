@@ -16,6 +16,10 @@ inputs:
     sources:
         required: true
         description: Space-separated source paths to check (e.g. 'src tests')
+    working-directory:
+        required: false
+        default: '.'
+        description: Working directory to run ruff from (e.g. backend for monorepos)
 
 runs:
     using: composite
@@ -24,6 +28,7 @@ runs:
           env:
               RUFF_CONFIG: ${{ inputs.config }}
               RUFF_SOURCES: ${{ inputs.sources }}
+          working-directory: ${{ inputs.working-directory }}
           run: ruff check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
           shell: bash
 
@@ -31,6 +36,7 @@ runs:
           env:
               RUFF_CONFIG: ${{ inputs.config }}
               RUFF_SOURCES: ${{ inputs.sources }}
+          working-directory: ${{ inputs.working-directory }}
           run: ruff format --check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
           shell: bash
 
@@ -39,6 +45,7 @@ runs:
           env:
               RUFF_CONFIG: ${{ inputs.config }}
               RUFF_SOURCES: ${{ inputs.sources }}
+          working-directory: ${{ inputs.working-directory }}
           run: |
               mkdir -p reports
               ruff check --config="${RUFF_CONFIG}" --output-format=json ${RUFF_SOURCES} > reports/ruff.json || true
@@ -50,4 +57,4 @@ runs:
           uses: actions/upload-artifact@v7
           with:
               name: ruff-report
-              path: reports/ruff.json
+              path: ${{ inputs.working-directory }}/reports/ruff.json
