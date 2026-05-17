@@ -1,4 +1,6 @@
-description: Download analysis reports and run SonarCloud scan
+# DEPRECATED — use sonar-scan-python@v1 instead (see chrysa/github-actions#43).
+# This action is kept for backward compatibility until all ecosystem repos migrate.
+description: '[DEPRECATED] Download analysis reports and run SonarCloud scan — use sonar-scan-python@v1'
 inputs:
   github-token:
     default: ''
