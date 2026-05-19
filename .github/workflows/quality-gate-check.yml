@@ -32,7 +32,7 @@ jobs:
                   if [ -f package.json ]; then npm ci; fi
             - name: Run quality gate verification
               id: quality-gate
-              run: make quality-gate-verify || exit_code=$?; exit ${exit_code:-0}
+              run: make quality-gate-verify || exit_code=$?; exit "${exit_code:-0}"
             - name: Report quality gate status
               if: always()
               run: |

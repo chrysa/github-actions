@@ -24,7 +24,7 @@ help: ## Display this help message
 # ─── Validation ──────────────────────────────────────────────────────────────
 
 validate: ## Validate all GitHub Actions definitions
-	action-validator .
+	actionlint
 
 pre-commit: ## Run pre-commit on all files
 	pre-commit run --all-files
@@ -36,9 +36,9 @@ install-pre-commit: ## Install and configure git pre-commit hooks
 
 # ── Standard chrysa targets ───────────────────────────────────────────────────
 
-install: ## Install required tools (action-validator, pre-commit)
+install: ## Install required tools (actionlint, pre-commit)
 	pip install --quiet pre-commit
-	which action-validator >/dev/null 2>&1 || pip install --quiet action-validator || true
+	which actionlint >/dev/null 2>&1 || go install github.com/rhysd/actionlint/cmd/actionlint@latest
 	pre-commit install
 
 dev: ## No-op for composite actions repo
@@ -47,8 +47,8 @@ dev: ## No-op for composite actions repo
 test: validate ## Run action validation (alias → validate)
 
 docker-test: ## Validate GitHub Actions in Docker (CI-compatible)
-	docker run --rm -v $(PWD):/work -w /work python:3.14-slim sh -c \
-		"pip install --quiet action-validator && action-validator ."
+	docker run --rm -v $(PWD):/work -w /work golang:1.25-alpine sh -c \
+		"go install github.com/rhysd/actionlint/cmd/actionlint@latest && actionlint"
 
 test-cov: validate ## Run action validation (no coverage for actions repo)
 
