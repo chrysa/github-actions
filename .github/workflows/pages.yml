@@ -27,7 +27,7 @@ jobs:
                   python-version: '3.14'
 
             - name: Install MkDocs
-              run: pip install --only-binary :all: mkdocs-material
+              run: "pip install --only-binary :all: mkdocs-material"
 
             - name: Build site
               run: mkdocs build
