@@ -56,3 +56,6 @@ node_modules/
 .claude/
 .secrets.baseline
 scout_apm_debug.log
+
+# CodeGraph (local index — never commit)
+.codegraph/
