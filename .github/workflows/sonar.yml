@@ -33,13 +33,15 @@ jobs:
               with:
                   fetch-depth: 0
             - name: SonarCloud scan
-              uses: chrysa/github-actions/sonar-scan-python@v1
+              uses: SonarSource/sonarqube-scan-action@v5
               with:
-                  python-version: "3.14"
-                  sonar-token: ${{ secrets.SONAR_TOKEN }}
-                  github-token: ${{ secrets.GITHUB_TOKEN }}
-                  project-key: chrysa_github-actions
-                  organization: chrysa
-                  project-name: github-actions
-                  sources: .
-                  tests: tests
+                  args: >
+                      -Dsonar.projectKey=chrysa_github-actions
+                      -Dsonar.organization=chrysa
+                      -Dsonar.projectName=github-actions
+                      -Dsonar.sources=.
+                      -Dsonar.sourceEncoding=UTF-8
+                      -Dsonar.exclusions=**/__pycache__/**,**/*.pyc,**/.mypy_cache/**
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

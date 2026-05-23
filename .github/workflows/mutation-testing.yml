@@ -73,7 +73,7 @@ jobs:
           THRESHOLD: ${{ inputs.threshold }}
           SCORE: ${{ steps.score.outputs.score }}
         run: |
-          echo "Mutation score: ${SCORE}% (threshold: ${THRESHOLD}%)"  
+          echo "Mutation score: ${SCORE}% (threshold: ${THRESHOLD}%)"
           if [ "$SCORE" -lt "$THRESHOLD" ]; then
             echo "❌ Mutation score ${SCORE}% is below threshold ${THRESHOLD}%"
             exit 1
