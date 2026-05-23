@@ -1,76 +1,73 @@
----
-name: SonarCloud JS/GAS scan
-description: Run SonarCloud scan for JavaScript / Google Apps Script projects, with optional artifact download
-
+description: Run SonarCloud scan for JavaScript / Google Apps Script projects, with
+  optional artifact download
 inputs:
-    sonar-token:
-        required: true
-        description: SonarCloud token
-    github-token:
-        required: true
-        description: GitHub token
-    project-key:
-        required: true
-        description: SonarCloud project key (e.g. chrysa_my-project)
-    organization:
-        required: true
-        description: SonarCloud organization slug
-    project-name:
-        required: true
-        description: SonarCloud project display name
-    sources:
-        required: false
-        default: 'src'
-        description: Comma-separated source directories to analyze
-    tests:
-        required: false
-        default: 'tests'
-        description: Comma-separated test directories (excluded from analysis)
-    js-file-suffixes:
-        required: false
-        default: '.js,.gs,.ts,.jsx,.tsx'
-        description: Comma-separated file suffixes recognized as JavaScript/TypeScript
-    coverage-report-paths:
-        required: false
-        default: ''
-        description: Comma-separated paths to LCOV coverage reports (e.g. coverage/lcov.info)
-    artifact-name:
-        required: false
-        default: ''
-        description: >
-            Name of a GitHub Actions artifact to download before the scan.
-            Leave empty to skip artifact download. The artifact is extracted
-            into the path defined by artifact-path.
-    artifact-path:
-        required: false
-        default: 'reports/'
-        description: >
-            Local path where the artifact will be extracted.
-            Only used when artifact-name is set.
+  artifact-name:
+    default: ''
+    description: 'Name of a GitHub Actions artifact to download before the scan. Leave
+      empty to skip artifact download. The artifact is extracted into the path defined
+      by artifact-path.
 
+      '
+    required: false
+  artifact-path:
+    default: reports/
+    description: 'Local path where the artifact will be extracted. Only used when
+      artifact-name is set.
+
+      '
+    required: false
+  coverage-report-paths:
+    default: ''
+    description: Comma-separated paths to LCOV coverage reports (e.g. coverage/lcov.info)
+    required: false
+  github-token:
+    description: GitHub token
+    required: true
+  js-file-suffixes:
+    default: .js,.gs,.ts,.jsx,.tsx
+    description: Comma-separated file suffixes recognized as JavaScript/TypeScript
+    required: false
+  organization:
+    description: SonarCloud organization slug
+    required: true
+  project-key:
+    description: SonarCloud project key (e.g. chrysa_my-project)
+    required: true
+  project-name:
+    description: SonarCloud project display name
+    required: true
+  sonar-token:
+    description: SonarCloud token
+    required: true
+  sources:
+    default: src
+    description: Comma-separated source directories to analyze
+    required: false
+  tests:
+    default: tests
+    description: Comma-separated test directories (excluded from analysis)
+    required: false
+name: SonarCloud JS/GAS scan
 runs:
-    using: composite
-    steps:
-        - name: Download coverage artifact (optional)
-          if: ${{ inputs.artifact-name != '' }}
-          uses: actions/download-artifact@v4
-          with:
-              name: ${{ inputs.artifact-name }}
-              path: ${{ inputs.artifact-path }}
+  steps:
+  - if: ${{ inputs.artifact-name != '' }}
+    name: Download coverage artifact (optional)
+    uses: actions/download-artifact@v4
+    with:
+      name: ${{ inputs.artifact-name }}
+      path: ${{ inputs.artifact-path }}
+  - env:
+      GITHUB_TOKEN: ${{ inputs.github-token }}
+      SONAR_TOKEN: ${{ inputs.sonar-token }}
+    name: SonarCloud scan
+    uses: SonarSource/sonarqube-scan-action@v5
+    with:
+      args: '-Dsonar.projectKey=${{ inputs.project-key }} -Dsonar.organization=${{
+        inputs.organization }} -Dsonar.projectName=${{ inputs.project-name }} -Dsonar.sources=${{
+        inputs.sources }} -Dsonar.tests=${{ inputs.tests }} -Dsonar.sourceEncoding=UTF-8
+        -Dsonar.javascript.file.suffixes=${{ inputs.js-file-suffixes }} -Dsonar.exclusions=node_modules/**,**/.git/**,**/__pycache__/**
+        ${{ inputs.coverage-report-paths != '''' && format(''-Dsonar.javascript.lcov.reportPaths={0}'',
+        inputs.coverage-report-paths) || '''' }}
 
-        - name: SonarCloud scan
-          uses: SonarSource/sonarqube-scan-action@v5
-          with:
-              args: >
-                  -Dsonar.projectKey=${{ inputs.project-key }}
-                  -Dsonar.organization=${{ inputs.organization }}
-                  -Dsonar.projectName=${{ inputs.project-name }}
-                  -Dsonar.sources=${{ inputs.sources }}
-                  -Dsonar.tests=${{ inputs.tests }}
-                  -Dsonar.sourceEncoding=UTF-8
-                  -Dsonar.javascript.file.suffixes=${{ inputs.js-file-suffixes }}
-                  -Dsonar.exclusions=node_modules/**,**/.git/**,**/__pycache__/**
-                  ${{ inputs.coverage-report-paths != '' && format('-Dsonar.javascript.lcov.reportPaths={0}', inputs.coverage-report-paths) || '' }}
-          env:
-              GITHUB_TOKEN: ${{ inputs.github-token }}
-              SONAR_TOKEN: ${{ inputs.sonar-token }}
+        '
+  using: composite

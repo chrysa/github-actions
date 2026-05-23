@@ -19,14 +19,15 @@
 
 - Chore: add Copilot instructions file (#5)
 
-Co-authored-by: anthony-greau <anthony.greau@padam.io> ([`e4a173b`](e4a173be84a9502e4a1174bb122fc58e96d71f03))
+Co-authored-by: anthony-greau <anthony.greau@gmail.com> ([`e4a173b`](e4a173be84a9502e4a1174bb122fc58e96d71f03))
+
 - Chore: update CHANGELOG.md for v1.0.5 [skip ci] ([`2166540`](2166540f045379b10146536a17e8d22b116c8370))
 
 ## [1.0.4] - 2026-03-29
 
 ### Miscellaneous
 
-- Chore: uniformize YAML syntax to match padam-av style (--- header, 4-space indent, timeout-minutes, shell: bash) ([`e05adfd`](e05adfd7981446417bbf0fdd905f1af232e19daa))
+- Chore: uniformize YAML syntax to match chrysa style (--- header, 4-space indent, timeout-minutes, shell: bash) ([`e05adfd`](e05adfd7981446417bbf0fdd905f1af232e19daa))
 
 ## [1.0.3] - 2026-03-29
 
@@ -65,9 +66,10 @@ Co-authored-by: anthony-greau <anthony.greau@padam.io> ([`e4a173b`](e4a173be84a9
 
 ### Features
 
-- Feat: initial composite actions for chrysa/* repos
+- Feat: initial composite actions for chrysa/\* repos
 
 Actions:
+
 - python-setup: setup-python + pip upgrade
 - install-project: pip install -e '.[extras]' (generic extras input)
 - tool-setup: python-setup + install-project (single entry point)
@@ -77,8 +79,7 @@ Actions:
 - sonar-scan: download reports + SonarCloud scan (inputs: project-key, org, ...)
 
 Config:
+
 - GitVersion.yml: GitHubFlow, fix=Patch, release=rc
 - .pre-commit-config.yaml: trailing-whitespace, check-yaml, beautysh, bashate, detect-secrets
 - .github/workflows/ci.yml: validate YAML + tag release (vX.Y.Z + floating vX) ([`d76d02f`](d76d02f0b11accc3befb57092445979136bb7364))
-
-
