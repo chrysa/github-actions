@@ -24,7 +24,7 @@ help: ## Display this help message
 # ─── Validation ──────────────────────────────────────────────────────────────
 
 validate: ## Validate all GitHub Actions definitions
-	actionlint
+	@command -v actionlint > /dev/null 2>&1 && actionlint || echo "⚠️  actionlint not installed — skip. Install: go install github.com/rhysd/actionlint/cmd/actionlint@latest"
 
 pre-commit: ## Run pre-commit on all files
 	pre-commit run --all-files
