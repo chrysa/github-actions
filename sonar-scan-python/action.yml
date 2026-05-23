@@ -71,7 +71,7 @@ runs:
       GITHUB_TOKEN: ${{ inputs.github-token }}
       SONAR_TOKEN: ${{ inputs.sonar-token }}
     name: SonarCloud Scan
-    uses: SonarSource/sonarqube-scan-action@v5
+    uses: SonarSource/sonarqube-scan-action@v8
     with:
       args: '-Dsonar.projectKey=${{ inputs.project-key }} -Dsonar.organization=${{
         inputs.organization }} -Dsonar.projectName=${{ inputs.project-name }} -Dsonar.sourceEncoding=UTF-8
