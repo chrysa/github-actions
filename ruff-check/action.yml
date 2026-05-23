@@ -1,60 +1,58 @@
----
-name: Ruff check
 description: Run ruff lint and format checks, upload JSON report on latest Python
-
 inputs:
-    python-version:
-        required: true
-        description: Current Python version (matrix)
-    latest-python:
-        required: true
-        description: Latest Python version (for conditional report upload)
-    config:
-        required: false
-        default: 'pyproject.toml'
-        description: Path to ruff config file
-    sources:
-        required: true
-        description: Space-separated source paths to check (e.g. 'src tests')
-    working-directory:
-        required: false
-        default: '.'
-        description: Working directory to run ruff from (e.g. backend for monorepos)
-
+  config:
+    default: pyproject.toml
+    description: Path to ruff config file
+    required: false
+  latest-python:
+    description: Latest Python version (for conditional report upload)
+    required: true
+  python-version:
+    description: Current Python version (matrix)
+    required: true
+  sources:
+    description: Space-separated source paths to check (e.g. 'src tests')
+    required: true
+  working-directory:
+    default: .
+    description: Working directory to run ruff from (e.g. backend for monorepos)
+    required: false
+name: Ruff check
 runs:
-    using: composite
-    steps:
-        - name: ruff — lint check
-          env:
-              RUFF_CONFIG: ${{ inputs.config }}
-              RUFF_SOURCES: ${{ inputs.sources }}
-          working-directory: ${{ inputs.working-directory }}
-          run: ruff check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
-          shell: bash
+  steps:
+  - env:
+      RUFF_CONFIG: ${{ inputs.config }}
+      RUFF_SOURCES: ${{ inputs.sources }}
+    name: "ruff \u2014 lint check"
+    run: ruff check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+  - env:
+      RUFF_CONFIG: ${{ inputs.config }}
+      RUFF_SOURCES: ${{ inputs.sources }}
+    name: "ruff \u2014 format check"
+    run: ruff format --check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+  - env:
+      RUFF_CONFIG: ${{ inputs.config }}
+      RUFF_SOURCES: ${{ inputs.sources }}
+    if: always() && inputs.python-version == inputs.latest-python
+    name: "ruff \u2014 produce JSON report"
+    run: 'mkdir -p reports
 
-        - name: ruff — format check
-          env:
-              RUFF_CONFIG: ${{ inputs.config }}
-              RUFF_SOURCES: ${{ inputs.sources }}
-          working-directory: ${{ inputs.working-directory }}
-          run: ruff format --check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
-          shell: bash
+      ruff check --config="${RUFF_CONFIG}" --output-format=json ${RUFF_SOURCES} >
+      reports/ruff.json || true
 
-        - name: ruff — produce JSON report
-          if: always() && inputs.python-version == inputs.latest-python
-          env:
-              RUFF_CONFIG: ${{ inputs.config }}
-              RUFF_SOURCES: ${{ inputs.sources }}
-          working-directory: ${{ inputs.working-directory }}
-          run: |
-              mkdir -p reports
-              ruff check --config="${RUFF_CONFIG}" --output-format=json ${RUFF_SOURCES} > reports/ruff.json || true
-              echo "ruff.json size: $(wc -c < reports/ruff.json) bytes"
-          shell: bash
+      echo "ruff.json size: $(wc -c < reports/ruff.json) bytes"
 
-        - name: Upload ruff report artifact
-          if: always() && inputs.python-version == inputs.latest-python
-          uses: actions/upload-artifact@v7
-          with:
-              name: ruff-report
-              path: ${{ inputs.working-directory }}/reports/ruff.json
+      '
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+  - if: always() && inputs.python-version == inputs.latest-python
+    name: Upload ruff report artifact
+    uses: actions/upload-artifact@v7
+    with:
+      name: ruff-report
+      path: ${{ inputs.working-directory }}/reports/ruff.json
+  using: composite
