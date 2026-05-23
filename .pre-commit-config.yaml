@@ -5,7 +5,7 @@ fail_fast: false
 minimum_pre_commit_version: 4.1.0
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: f1dff44d3a9ae852957f34def96390f28719c232
+      rev: fa6b006f0e53d6c0a4a30d6f7b1200a899444634
       hooks:
           - id: check-json
           - id: check-yaml
