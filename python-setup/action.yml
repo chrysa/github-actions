@@ -3,6 +3,10 @@ inputs:
   python-version:
     description: Python version to set up
     required: true
+  cache:
+    description: "Package manager to cache (e.g. 'pip'). Leave empty to disable caching."
+    required: false
+    default: ""
 name: Setup Python
 runs:
   steps:
@@ -10,6 +14,7 @@ runs:
     uses: actions/setup-python@v6
     with:
       python-version: ${{ inputs.python-version }}
+      cache: ${{ inputs.cache }}
   - name: Check Python version
     run: python --version
     shell: bash
