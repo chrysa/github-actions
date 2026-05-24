@@ -52,7 +52,7 @@ runs:
   steps:
   - if: ${{ inputs.artifact-name != '' }}
     name: Download coverage artifact (optional)
-    uses: actions/download-artifact@v4
+    uses: actions/download-artifact@v8
     with:
       name: ${{ inputs.artifact-name }}
       path: ${{ inputs.artifact-path }}
