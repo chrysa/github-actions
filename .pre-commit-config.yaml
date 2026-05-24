@@ -5,17 +5,18 @@ fail_fast: false
 minimum_pre_commit_version: 4.1.0
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: f1dff44d3a9ae852957f34def96390f28719c232
+      rev: fa6b006f0e53d6c0a4a30d6f7b1200a899444634
       hooks:
           - id: check-json
           - id: check-yaml
+            exclude: ^\.github/ISSUE_TEMPLATE/
           - id: trailing-whitespace
           - id: end-of-file-fixer
           - id: detect-private-key
           - id: no-commit-to-branch
             args: [--branch, main]
     - repo: https://github.com/igorshubovych/markdownlint-cli
-      rev: f7ed74202ac8ec26bab4a68359556c5243df142f
+      rev: dd34288d0608e7b8825ee7e4e8c406e0a9780cf7
       hooks:
           - id: markdownlint
             args: [--fix]
@@ -31,9 +32,19 @@ repos:
           - id: bashate
             args: [--ignore=E006,E020]
     - repo: https://github.com/chrysa/pre-commit-tools
-      rev: v0.1.1-73
+      rev: v0.1.1-76
       hooks:
           - id: yaml-sorter
             exclude: '^(\.github/|GitVersion\.yml)'
           - id: json-sorter
           - id: env-file-check
+          - id: regression-gate
+            stages: [pre-push]
+
+    - repo: https://github.com/compilerla/conventional-pre-commit
+      rev: v4.4.0
+      hooks:
+          - id: conventional-pre-commit
+            stages: [commit-msg]
+            args: [feat, fix, docs, style, refactor, test, chore, perf, revert, ci]
+
