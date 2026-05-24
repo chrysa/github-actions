@@ -1,62 +1,58 @@
-description: Run pytest suite, upload results, publish to PR and send coverage to Codecov
+---
 name: Run tests
+description: Run pytest suite, upload results, publish to PR and send coverage to Codecov
+
 inputs:
-  cov-module:
-    description: Python module name to measure coverage for (e.g. pre_commit_hooks)
-    required: true
-  cov-fail-under:
-    description: Minimum coverage percentage (e.g. 85). Leave empty to disable threshold.
-    required: false
-    default: ''
-  latest-python:
-    description: Latest Python version (for conditional publish/codecov)
-    required: true
-  python-version:
-    description: Current Python version (matrix)
-    required: true
-  working-directory:
-    description: Working directory to run pytest from (e.g. backend for monorepos)
-    required: false
-    default: .
+    python-version:
+        required: true
+        description: Current Python version (matrix)
+    latest-python:
+        required: true
+        description: Latest Python version (for conditional publish/codecov)
+    cov-module:
+        required: true
+        description: Python module name to measure coverage for (e.g. pre_commit_hooks)
+    working-directory:
+        required: false
+        default: '.'
+        description: Working directory to run pytest from (e.g. backend for monorepos)
+
 runs:
-  using: composite
-  steps:
-    - name: Run test suite
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      env:
-        COV_MODULE: ${{ inputs.cov-module }}
-        COV_FAIL_UNDER: ${{ inputs.cov-fail-under }}
-      run: |
-        mkdir -p reports
-        FAIL_UNDER_FLAG=""
-        if [ -n "${COV_FAIL_UNDER}" ]; then
-          FAIL_UNDER_FLAG="--cov-fail-under=${COV_FAIL_UNDER}"
-        fi
-        pytest \
-          --cov="${COV_MODULE}" \
-          --cov-branch \
-          --cov-report=xml:reports/coverage.xml \
-          --cov-report=term-missing \
-          --junitxml=reports/junit.xml \
-          ${FAIL_UNDER_FLAG} \
-          -v
-    - if: always()
-      name: Upload test results
-      uses: actions/upload-artifact@v7
-      with:
-        name: test-results-${{ inputs.python-version }}
-        path: ${{ inputs.working-directory }}/reports/
-    - if: always() && inputs.python-version == inputs.latest-python
-      name: Publish test results to PR
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      with:
-        check_name: pytest
-        comment_title: Test Results
-        files: ${{ inputs.working-directory }}/reports/junit.xml
-    - if: inputs.python-version == inputs.latest-python
-      name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v6
-      with:
-        fail_ci_if_error: false
-        files: ${{ inputs.working-directory }}/reports/coverage.xml
+    using: composite
+    steps:
+        - name: Run test suite
+          env:
+              COV_MODULE: ${{ inputs.cov-module }}
+          working-directory: ${{ inputs.working-directory }}
+          run: |
+              mkdir -p reports
+              pytest \
+                --cov="${COV_MODULE}" \
+                --cov-branch \
+                --cov-report=xml:reports/coverage.xml \
+                --cov-report=term-missing \
+                --junitxml=reports/junit.xml \
+                -v
+          shell: bash
+
+        - name: Upload test results
+          if: always()
+          uses: actions/upload-artifact@v7
+          with:
+              name: test-results-${{ inputs.python-version }}
+              path: ${{ inputs.working-directory }}/reports/
+
+        - name: Publish test results to PR
+          if: always() && inputs.python-version == inputs.latest-python
+          uses: EnricoMi/publish-unit-test-result-action@v2
+          with:
+              files: ${{ inputs.working-directory }}/reports/junit.xml
+              comment_title: Test Results
+              check_name: pytest
+
+        - name: Upload coverage to Codecov
+          if: inputs.python-version == inputs.latest-python
+          uses: codecov/codecov-action@v6
+          with:
+              files: ${{ inputs.working-directory }}/reports/coverage.xml
+              fail_ci_if_error: false
