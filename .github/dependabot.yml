@@ -1,13 +1,51 @@
 ---
+# Dependabot — chrysa/github-actions
 version: 2
 updates:
+    # ═══ GitHub Actions (tous repos) ═══
     - package-ecosystem: github-actions
       directory: /
-      schedule:
-          interval: weekly
-        open-pull-requests-limit: 5
-          day: monday
-      labels:
-          - dependencies
+      assignees:
+          - chrysa
+      reviewers:
+          - chrysa
+      open-pull-requests-limit: 8
       commit-message:
-          prefix: chore
+          prefix: "[SKIP CI] [GA] "
+      labels:
+          - skip-ci
+          - dependencies
+          - Ci
+      schedule:
+          interval: cron
+          cronjob: "0 4 * * 5"
+      groups:
+          actions-official:
+              patterns:
+                  - actions/*
+          peter-evans:
+              patterns:
+                  - peter-evans/*
+          community-actions:
+              patterns:
+                  - "*"
+      cooldown:
+          default-days: 7
+
+    # ═══ Pre-commit ═══
+    - package-ecosystem: pre-commit
+      directory: /
+      assignees:
+          - chrysa
+      reviewers:
+          - chrysa
+      open-pull-requests-limit: 2
+      commit-message:
+          prefix: "[SKIP CI] [pre-commit] "
+      labels:
+          - skip-ci
+          - dependencies
+          - Pre-commit
+      schedule:
+          interval: cron
+          cronjob: "0 4 * * 5"

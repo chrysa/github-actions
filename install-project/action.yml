@@ -1,23 +1,21 @@
----
-name: Install project
 description: Install a pip-based project with extras (pip install -e '.[extras]')
-
 inputs:
-    extras:
-        required: false
-        default: ''
-        description: Comma-separated extras to install (e.g. lint,test,dead_code)
-
+  extras:
+    default: ''
+    description: Comma-separated extras to install (e.g. lint,test,dead_code)
+    required: false
+  working-directory:
+    default: '.'
+    description: Working directory to run pip install from (e.g. backend for monorepos)
+    required: false
+name: Install project
 runs:
-    using: composite
-    steps:
-        - name: Install package
-          env:
-              EXTRAS: ${{ inputs.extras }}
-          run: |
-              if [ -n "${EXTRAS}" ]; then
-                pip install -e ".[${EXTRAS}]"
-              else
-                pip install -e .
-              fi
-          shell: bash
+  steps:
+  - env:
+      EXTRAS: ${{ inputs.extras }}
+    name: Install package
+    run: "if [ -n \"${EXTRAS}\" ]; then\n  pip install -e \".[${EXTRAS}]\"\nelse\n\
+      \  pip install -e .\nfi\n"
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+  using: composite
