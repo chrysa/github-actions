@@ -38,6 +38,7 @@ repos:
             exclude: '^(\.github/|GitVersion\.yml)'
           - id: json-sorter
           - id: env-file-check
+          - id: adr-gate
           - id: regression-gate
             stages: [pre-push]
 
