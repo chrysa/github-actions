@@ -59,3 +59,4 @@ scout_apm_debug.log
 
 # CodeGraph (local index — never commit)
 .codegraph/
+graphify-out/
