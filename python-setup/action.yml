@@ -1,20 +1,20 @@
 description: Set up Python, print version and upgrade pip
 inputs:
+  cache:
+    default: ''
+    description: Package manager to cache (e.g. 'pip'). Leave empty to disable caching.
+    required: false
   python-version:
     description: Python version to set up
     required: true
-  cache:
-    description: "Package manager to cache (e.g. 'pip'). Leave empty to disable caching."
-    required: false
-    default: ""
 name: Setup Python
 runs:
   steps:
   - name: Set up Python ${{ inputs.python-version }}
     uses: actions/setup-python@v6
     with:
-      python-version: ${{ inputs.python-version }}
       cache: ${{ inputs.cache }}
+      python-version: ${{ inputs.python-version }}
   - name: Check Python version
     run: python --version
     shell: bash
