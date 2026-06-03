@@ -67,20 +67,42 @@ runs:
   - name: List reports available for SonarCloud
     run: ls -lh reports/ || echo "reports/ directory is empty or missing"
     shell: bash
-  - env:
+  - name: Install Sonar Scanner CLI (Maven Central, with retry)
+    shell: bash
+    env:
+      SCANNER_VERSION: 7.1.0.4889
+    run: |
+      # Maven Central is the reliable mirror; binaries.sonarsource.com rate-limits CI runners.
+      url="https://repo1.maven.org/maven2/org/sonarsource/scanner/cli/sonar-scanner-cli/${SCANNER_VERSION}/sonar-scanner-cli-${SCANNER_VERSION}.zip"
+      ok=""
+      for i in 1 2 3 4 5; do
+        if wget --no-verbose -O /tmp/sonar-scanner.zip "$url"; then ok=1; break; fi
+        echo "scanner download attempt $i failed; retry in $((i*5))s..."
+        sleep $((i*5))
+      done
+      [ "$ok" = 1 ] || { echo "::error::Sonar Scanner download failed after 5 attempts"; exit 1; }
+      unzip -q -o /tmp/sonar-scanner.zip -d "$RUNNER_TEMP"
+      bin_dir="$(dirname "$(find "$RUNNER_TEMP" -type f -path '*/bin/sonar-scanner' | head -1)")"
+      [ -n "$bin_dir" ] || { echo "::error::sonar-scanner binary not found after unzip"; exit 1; }
+      echo "$bin_dir" >> "$GITHUB_PATH"
+  - name: SonarCloud Scan
+    shell: bash
+    env:
       GITHUB_TOKEN: ${{ inputs.github-token }}
       SONAR_TOKEN: ${{ inputs.sonar-token }}
-    name: SonarCloud Scan
-    uses: SonarSource/sonarqube-scan-action@v8
-    with:
-      scannerVersion: 5.0.1.3006
-      args: '-Dsonar.projectKey=${{ inputs.project-key }} -Dsonar.organization=${{
-        inputs.organization }} -Dsonar.projectName=${{ inputs.project-name }} -Dsonar.sourceEncoding=UTF-8
-        -Dsonar.sources=${{ inputs.sources }} ${{ inputs.tests != '''' && format(''-Dsonar.tests={0}'',
-        inputs.tests) || '''' }} -Dsonar.python.version=${{ inputs.python-version
-        }} -Dsonar.python.coverage.reportPaths=${{ inputs.coverage-report }} -Dsonar.python.ruff.reportPaths=${{
-        inputs.ruff-report }} -Dsonar.python.mypy.reportPaths=${{ inputs.mypy-report
-        }} -Dsonar.python.xunit.reportPath=${{ inputs.junit-report }} -Dsonar.exclusions=**/__pycache__/**,**/*.egg-info/**,**/.git/**,**/node_modules/**
-
-        '
+      SONAR_HOST_URL: https://sonarcloud.io
+    run: >
+      sonar-scanner
+      -Dsonar.projectKey=${{ inputs.project-key }}
+      -Dsonar.organization=${{ inputs.organization }}
+      -Dsonar.projectName=${{ inputs.project-name }}
+      -Dsonar.sourceEncoding=UTF-8
+      -Dsonar.sources=${{ inputs.sources }}
+      ${{ inputs.tests != '' && format('-Dsonar.tests={0}', inputs.tests) || '' }}
+      -Dsonar.python.version=${{ inputs.python-version }}
+      -Dsonar.python.coverage.reportPaths=${{ inputs.coverage-report }}
+      -Dsonar.python.ruff.reportPaths=${{ inputs.ruff-report }}
+      -Dsonar.python.mypy.reportPaths=${{ inputs.mypy-report }}
+      -Dsonar.python.xunit.reportPath=${{ inputs.junit-report }}
+      -Dsonar.exclusions=**/__pycache__/**,**/*.egg-info/**,**/.git/**,**/node_modules/**
   using: composite
