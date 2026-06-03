@@ -1,108 +1,95 @@
-description: Download Python analysis reports and run SonarCloud scan with Python-specific
-  configuration
-inputs:
-  coverage-report:
-    default: reports/coverage.xml
-    description: Path to coverage XML report (Cobertura format)
-    required: false
-  github-token:
-    description: GitHub token
-    required: true
-  junit-report:
-    default: reports/junit.xml
-    description: Path to JUnit XML test report
-    required: false
-  mypy-report:
-    default: reports/mypy.txt
-    description: Path to mypy text report
-    required: false
-  organization:
-    description: SonarCloud organization slug
-    required: true
-  project-key:
-    description: SonarCloud project key (e.g. chrysa_my-project)
-    required: true
-  project-name:
-    description: SonarCloud project display name
-    required: true
-  python-version:
-    description: Python version used for analysis (e.g. 3.14)
-    required: true
-  ruff-report:
-    default: reports/ruff.json
-    description: Path to ruff JSON report
-    required: false
-  sonar-token:
-    description: SonarCloud token
-    required: true
-  sources:
-    default: src
-    description: Comma-separated source directories (e.g. src,lib)
-    required: false
-  tests:
-    default: tests
-    description: Comma-separated test directories (e.g. tests,test)
-    required: false
+---
 name: SonarCloud scan (Python)
+description: Download Python analysis reports and run SonarCloud scan with Python-specific configuration
+
+inputs:
+    python-version:
+        required: true
+        description: Python version used for analysis (e.g. 3.14)
+    sonar-token:
+        required: true
+        description: SonarCloud token
+    github-token:
+        required: true
+        description: GitHub token
+    project-key:
+        required: true
+        description: SonarCloud project key (e.g. chrysa_my-project)
+    organization:
+        required: true
+        description: SonarCloud organization slug
+    project-name:
+        required: true
+        description: SonarCloud project display name
+    sources:
+        required: false
+        default: 'src'
+        description: Comma-separated source directories (e.g. src,lib)
+    tests:
+        required: false
+        default: 'tests'
+        description: Comma-separated test directories (e.g. tests,test)
+    coverage-report:
+        required: false
+        default: 'reports/coverage.xml'
+        description: Path to coverage XML report (Cobertura format)
+    ruff-report:
+        required: false
+        default: 'reports/ruff.json'
+        description: Path to ruff JSON report
+    mypy-report:
+        required: false
+        default: 'reports/mypy.txt'
+        description: Path to mypy text report
+    junit-report:
+        required: false
+        default: 'reports/junit.xml'
+        description: Path to JUnit XML test report
+
 runs:
-  steps:
-  - continue-on-error: true
-    name: Download test results (${{ inputs.python-version }})
-    uses: actions/download-artifact@v8
-    with:
-      name: test-results-${{ inputs.python-version }}
-      path: reports/
-  - continue-on-error: true
-    name: Download ruff report
-    uses: actions/download-artifact@v8
-    with:
-      name: ruff-report
-      path: reports/
-  - continue-on-error: true
-    name: Download mypy report
-    uses: actions/download-artifact@v8
-    with:
-      name: mypy-report
-      path: reports/
-  - name: List reports available for SonarCloud
-    run: ls -lh reports/ || echo "reports/ directory is empty or missing"
-    shell: bash
-  - name: Install Sonar Scanner CLI (Maven Central, with retry)
-    shell: bash
-    env:
-      SCANNER_VERSION: 7.1.0.4889
-    run: |
-      # Maven Central is the reliable mirror; binaries.sonarsource.com rate-limits CI runners.
-      url="https://repo1.maven.org/maven2/org/sonarsource/scanner/cli/sonar-scanner-cli/${SCANNER_VERSION}/sonar-scanner-cli-${SCANNER_VERSION}.zip"
-      ok=""
-      for i in 1 2 3 4 5; do
-        if wget --no-verbose -O /tmp/sonar-scanner.zip "$url"; then ok=1; break; fi
-        echo "scanner download attempt $i failed; retry in $((i*5))s..."
-        sleep $((i*5))
-      done
-      [ "$ok" = 1 ] || { echo "::error::Sonar Scanner download failed after 5 attempts"; exit 1; }
-      unzip -q -o /tmp/sonar-scanner.zip -d "$RUNNER_TEMP"
-      bin_dir="$(dirname "$(find "$RUNNER_TEMP" -type f -path '*/bin/sonar-scanner' | head -1)")"
-      [ -n "$bin_dir" ] || { echo "::error::sonar-scanner binary not found after unzip"; exit 1; }
-      echo "$bin_dir" >> "$GITHUB_PATH"
-  - name: SonarCloud Scan
-    shell: bash
-    env:
-      GITHUB_TOKEN: ${{ inputs.github-token }}
-      SONAR_TOKEN: ${{ inputs.sonar-token }}
-      SONAR_HOST_URL: https://sonarcloud.io
-    run: >
-      sonar-scanner
-      -Dsonar.projectKey=${{ inputs.project-key }}
-      -Dsonar.organization=${{ inputs.organization }}
-      -Dsonar.projectName=${{ inputs.project-name }}
-      -Dsonar.sourceEncoding=UTF-8
-      -Dsonar.sources=${{ inputs.sources }}
-      ${{ inputs.tests != '' && format('-Dsonar.tests={0}', inputs.tests) || '' }}
-      -Dsonar.python.version=${{ inputs.python-version }}
-      -Dsonar.python.coverage.reportPaths=${{ inputs.coverage-report }}
-      -Dsonar.python.ruff.reportPaths=${{ inputs.ruff-report }}
-      -Dsonar.python.mypy.reportPaths=${{ inputs.mypy-report }}
-      -Dsonar.python.xunit.reportPath=${{ inputs.junit-report }}
-      -Dsonar.exclusions=**/__pycache__/**,**/*.egg-info/**,**/.git/**,**/node_modules/**
-  using: composite
+    using: composite
+    steps:
+        - name: Download test results (${{ inputs.python-version }})
+          uses: actions/download-artifact@v8
+          with:
+              name: test-results-${{ inputs.python-version }}
+              path: reports/
+          continue-on-error: true
+
+        - name: Download ruff report
+          uses: actions/download-artifact@v8
+          with:
+              name: ruff-report
+              path: reports/
+          continue-on-error: true
+
+        - name: Download mypy report
+          uses: actions/download-artifact@v8
+          with:
+              name: mypy-report
+              path: reports/
+          continue-on-error: true
+
+        - name: List reports available for SonarCloud
+          run: ls -lh reports/ || echo "reports/ directory is empty or missing"
+          shell: bash
+
+        - name: SonarCloud Scan
+          uses: SonarSource/sonarqube-scan-action@v5
+          with:
+              args: >
+                  -Dsonar.projectKey=${{ inputs.project-key }}
+                  -Dsonar.organization=${{ inputs.organization }}
+                  -Dsonar.projectName=${{ inputs.project-name }}
+                  -Dsonar.sourceEncoding=UTF-8
+                  -Dsonar.sources=${{ inputs.sources }}
+                  -Dsonar.tests=${{ inputs.tests }}
+                  -Dsonar.python.version=${{ inputs.python-version }}
+                  -Dsonar.python.coverage.reportPaths=${{ inputs.coverage-report }}
+                  -Dsonar.python.ruff.reportPaths=${{ inputs.ruff-report }}
+                  -Dsonar.python.mypy.reportPaths=${{ inputs.mypy-report }}
+                  -Dsonar.python.xunit.reportPath=${{ inputs.junit-report }}
+                  -Dsonar.exclusions=**/__pycache__/**,**/*.egg-info/**,**/.git/**,**/node_modules/**
+          env:
+              GITHUB_TOKEN: ${{ inputs.github-token }}
+              SONAR_TOKEN: ${{ inputs.sonar-token }}
