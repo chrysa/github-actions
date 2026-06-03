@@ -62,3 +62,8 @@ scout_apm_debug.log
 graphify
 sys
 graphify-out/
+
+# graphify (local knowledge graph — never commit)
+/graphify
+/sys
+.graphify_version
