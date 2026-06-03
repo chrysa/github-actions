@@ -67,21 +67,24 @@ runs:
   - name: List reports available for SonarCloud
     run: ls -lh reports/ || echo "reports/ directory is empty or missing"
     shell: bash
-  - name: Install Sonar Scanner CLI (with retry)
+  - name: Install Sonar Scanner CLI (Maven Central, with retry)
     shell: bash
     env:
-      SCANNER_VERSION: 6.2.1.4610
+      SCANNER_VERSION: 7.1.0.4889
     run: |
-      url="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SCANNER_VERSION}-linux-x64.zip"
+      # Maven Central is the reliable mirror; binaries.sonarsource.com rate-limits CI runners.
+      url="https://repo1.maven.org/maven2/org/sonarsource/scanner/cli/sonar-scanner-cli/${SCANNER_VERSION}/sonar-scanner-cli-${SCANNER_VERSION}.zip"
       ok=""
       for i in 1 2 3 4 5; do
         if wget --no-verbose -O /tmp/sonar-scanner.zip "$url"; then ok=1; break; fi
-        echo "scanner download attempt $i failed (sonarsource CDN flaky); retry in $((i*8))s..."
-        sleep $((i*8))
+        echo "scanner download attempt $i failed; retry in $((i*5))s..."
+        sleep $((i*5))
       done
       [ "$ok" = 1 ] || { echo "::error::Sonar Scanner download failed after 5 attempts"; exit 1; }
       unzip -q -o /tmp/sonar-scanner.zip -d "$RUNNER_TEMP"
-      echo "$RUNNER_TEMP/sonar-scanner-${SCANNER_VERSION}-linux-x64/bin" >> "$GITHUB_PATH"
+      bin_dir="$(dirname "$(find "$RUNNER_TEMP" -type f -path '*/bin/sonar-scanner' | head -1)")"
+      [ -n "$bin_dir" ] || { echo "::error::sonar-scanner binary not found after unzip"; exit 1; }
+      echo "$bin_dir" >> "$GITHUB_PATH"
   - name: SonarCloud Scan
     shell: bash
     env:
