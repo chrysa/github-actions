@@ -67,19 +67,39 @@ runs:
   - name: List reports available for SonarCloud
     run: ls -lh reports/ || echo "reports/ directory is empty or missing"
     shell: bash
-  - env:
+  - name: Install Sonar Scanner CLI (with retry)
+    shell: bash
+    env:
+      SCANNER_VERSION: 6.2.1.4610
+    run: |
+      url="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SCANNER_VERSION}-linux-x64.zip"
+      ok=""
+      for i in 1 2 3 4 5; do
+        if wget --no-verbose -O /tmp/sonar-scanner.zip "$url"; then ok=1; break; fi
+        echo "scanner download attempt $i failed (sonarsource CDN flaky); retry in $((i*8))s..."
+        sleep $((i*8))
+      done
+      [ "$ok" = 1 ] || { echo "::error::Sonar Scanner download failed after 5 attempts"; exit 1; }
+      unzip -q -o /tmp/sonar-scanner.zip -d "$RUNNER_TEMP"
+      echo "$RUNNER_TEMP/sonar-scanner-${SCANNER_VERSION}-linux-x64/bin" >> "$GITHUB_PATH"
+  - name: SonarCloud Scan
+    shell: bash
+    env:
       GITHUB_TOKEN: ${{ inputs.github-token }}
       SONAR_TOKEN: ${{ inputs.sonar-token }}
-    name: SonarCloud Scan
-    uses: SonarSource/sonarqube-scan-action@v4.2.1
-    with:
-      args: '-Dsonar.projectKey=${{ inputs.project-key }} -Dsonar.organization=${{
-        inputs.organization }} -Dsonar.projectName=${{ inputs.project-name }} -Dsonar.sourceEncoding=UTF-8
-        -Dsonar.sources=${{ inputs.sources }} ${{ inputs.tests != '''' && format(''-Dsonar.tests={0}'',
-        inputs.tests) || '''' }} -Dsonar.python.version=${{ inputs.python-version
-        }} -Dsonar.python.coverage.reportPaths=${{ inputs.coverage-report }} -Dsonar.python.ruff.reportPaths=${{
-        inputs.ruff-report }} -Dsonar.python.mypy.reportPaths=${{ inputs.mypy-report
-        }} -Dsonar.python.xunit.reportPath=${{ inputs.junit-report }} -Dsonar.exclusions=**/__pycache__/**,**/*.egg-info/**,**/.git/**,**/node_modules/**
-
-        '
+      SONAR_HOST_URL: https://sonarcloud.io
+    run: >
+      sonar-scanner
+      -Dsonar.projectKey=${{ inputs.project-key }}
+      -Dsonar.organization=${{ inputs.organization }}
+      -Dsonar.projectName=${{ inputs.project-name }}
+      -Dsonar.sourceEncoding=UTF-8
+      -Dsonar.sources=${{ inputs.sources }}
+      ${{ inputs.tests != '' && format('-Dsonar.tests={0}', inputs.tests) || '' }}
+      -Dsonar.python.version=${{ inputs.python-version }}
+      -Dsonar.python.coverage.reportPaths=${{ inputs.coverage-report }}
+      -Dsonar.python.ruff.reportPaths=${{ inputs.ruff-report }}
+      -Dsonar.python.mypy.reportPaths=${{ inputs.mypy-report }}
+      -Dsonar.python.xunit.reportPath=${{ inputs.junit-report }}
+      -Dsonar.exclusions=**/__pycache__/**,**/*.egg-info/**,**/.git/**,**/node_modules/**
   using: composite
