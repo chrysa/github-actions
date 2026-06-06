@@ -41,7 +41,7 @@ inputs:
     required: false
   tests:
     default: tests
-    description: Comma-separated test directories (e.g. tests,test). Directories that do not exist are skipped, so sonar.tests is omitted entirely when none are present.
+    description: Comma-separated test directories (e.g. tests,test). Directories that do not exist are skipped (sonar.tests omitted entirely when none are present). Existing test dirs are also added to sonar.exclusions so a broad sonar.sources (e.g. ".") does not index them twice.
     required: false
 runs:
   using: composite
@@ -67,13 +67,14 @@ runs:
   - name: List reports available for SonarCloud
     run: ls -lh reports/ || echo "reports/ directory is empty or missing"
     shell: bash
-  - name: Resolve existing test directories
+  - name: Resolve test directories and Sonar exclusions
     id: sonar-tests
     shell: bash
     env:
       SONAR_TESTS_INPUT: ${{ inputs.tests }}
     run: |
-      arg=""
+      base='**/__pycache__/**,**/*.egg-info/**,**/.git/**,**/node_modules/**'
+      tests_arg=""
       existing=()
       IFS=',' read -ra dirs <<< "$SONAR_TESTS_INPUT"
       for d in "${dirs[@]}"; do
@@ -82,13 +83,19 @@ runs:
           existing+=("$trimmed")
         fi
       done
+      excl="$base"
       if [ "${#existing[@]}" -gt 0 ]; then
         joined="$(IFS=','; echo "${existing[*]}")"
-        arg="-Dsonar.tests=$joined"
+        tests_arg="-Dsonar.tests=$joined"
+        # Keep test dirs out of the main source set so sonar.sources="." does not index them twice.
+        for d in "${existing[@]}"; do
+          excl="$excl,$d/**"
+        done
       else
         echo "No configured test directories exist (input: '$SONAR_TESTS_INPUT'); omitting -Dsonar.tests"
       fi
-      echo "arg=$arg" >> "$GITHUB_OUTPUT"
+      echo "tests_arg=$tests_arg" >> "$GITHUB_OUTPUT"
+      echo "exclusions=$excl" >> "$GITHUB_OUTPUT"
   - env:
       GITHUB_TOKEN: ${{ inputs.github-token }}
       SONAR_TOKEN: ${{ inputs.sonar-token }}
@@ -101,10 +108,10 @@ runs:
         -Dsonar.projectName=${{ inputs.project-name }}
         -Dsonar.sourceEncoding=UTF-8
         -Dsonar.sources=${{ inputs.sources }}
-        ${{ steps.sonar-tests.outputs.arg }}
+        ${{ steps.sonar-tests.outputs.tests_arg }}
         -Dsonar.python.version=${{ inputs.python-version }}
         -Dsonar.python.coverage.reportPaths=${{ inputs.coverage-report }}
         -Dsonar.python.ruff.reportPaths=${{ inputs.ruff-report }}
         -Dsonar.python.mypy.reportPaths=${{ inputs.mypy-report }}
         -Dsonar.python.xunit.reportPath=${{ inputs.junit-report }}
-        -Dsonar.exclusions=**/__pycache__/**,**/*.egg-info/**,**/.git/**,**/node_modules/**
+        -Dsonar.exclusions=${{ steps.sonar-tests.outputs.exclusions }}
