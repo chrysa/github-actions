@@ -1,0 +1,28 @@
+description: Regenerate code-derived docs and fail if they drift from the committed
+  copy
+inputs:
+  paths:
+    default: docs/
+    description: Space-separated paths the drift check inspects
+    required: false
+  target:
+    default: docs-code
+    description: Make target that regenerates code-derived docs (no live server)
+    required: false
+name: Doc drift check
+runs:
+  steps:
+  - env:
+      DOC_TARGET: ${{ inputs.target }}
+    name: Regenerate code-derived docs
+    run: make "${DOC_TARGET}"
+    shell: bash
+  - env:
+      DOC_PATHS: ${{ inputs.paths }}
+      DOC_TARGET: ${{ inputs.target }}
+    name: Fail on documentation drift
+    run: "if ! git diff --exit-code -- ${DOC_PATHS}; then\n  echo \"::error::Generated\
+      \ docs are stale. Run 'make ${DOC_TARGET}' (or 'make docs') locally and commit\
+      \ the result.\"\n  git --no-pager diff --stat -- ${DOC_PATHS}\n  exit 1\nfi\n"
+    shell: bash
+  using: composite
