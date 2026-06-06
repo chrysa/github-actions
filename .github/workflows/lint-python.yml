@@ -1,0 +1,42 @@
+---
+name: Lint (pre-commit replay)
+
+on:
+    workflow_call:
+        inputs:
+            python-version:
+                type: string
+                required: false
+                default: "3.14"
+            extras:
+                type: string
+                required: false
+                default: "dev"
+
+permissions:
+    contents: read
+
+jobs:
+    lint:
+        name: Ruff + Mypy (pre-commit)
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v6.0.2
+
+            # tool-setup = python-setup + install-project[extras]; ensures mypy
+            # (language: system) and its stubs/deps are available for the replay.
+            - name: Setup environment
+              uses: ./tool-setup
+              with:
+                  python-version: ${{ inputs.python-version }}
+                  extras: ${{ inputs.extras }}
+
+            # Replay every pre-commit hook, including pre-push-staged ones (mypy).
+            # Hooks without an explicit `stages:` (ruff, ruff-format) run at all
+            # stages, so a single invocation covers the full lint surface.
+            - uses: pre-commit/action@v3.0.1
+              with:
+                  extra_args: --all-files --hook-stage pre-push
+              env:
+                  SKIP: no-commit-to-branch
