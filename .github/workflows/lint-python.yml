@@ -27,7 +27,7 @@ jobs:
             # tool-setup = python-setup + install-project[extras]; ensures mypy
             # (language: system) and its stubs/deps are available for the replay.
             - name: Setup environment
-              uses: ./tool-setup
+              uses: chrysa/github-actions/tool-setup@v1.0.12
               with:
                   python-version: ${{ inputs.python-version }}
                   extras: ${{ inputs.extras }}
