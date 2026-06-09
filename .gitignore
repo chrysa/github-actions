@@ -1,69 +1,69 @@
-# ── Python ────────────────────────────────────────────────────────────────────
-**/__pycache__/
-*.py[cod]
-*.py,cover
-*.cover
-*.coverage*
-.coverage
-.coverage.*
-htmlcov/
-
-# Egg / build / dist
-*.egg-info/
-dist/
-build/
-.eggs/
-
-# Virtual envs
-.venv/
-venv/
-env/
-
-# ── Tools ─────────────────────────────────────────────────────────────────────
-.ruff_cache/
-**/.*cache*/
-.mypy_cache/
-.pytest_cache/
-.trunk/
-
-# ── Editors / OS ──────────────────────────────────────────────────────────────
-.DS_Store
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# ── Environment & secrets ─────────────────────────────────────────────────────
-.env
-.env.*
-!.env.example
-secrets.yaml
-
-# ── Docker runtime ────────────────────────────────────────────────────────────
-docker/entrypoints/bootstraped
-
-# ── Generated output ──────────────────────────────────────────────────────────
-out/
-reports/
-guidelines_report.html
-
-# ── TypeScript / Node ─────────────────────────────────────────────────────────
-node_modules/
-*.tsbuildinfo
-
-# ── CI / misc ─────────────────────────────────────────────────────────────────
-.git-branches.toml
-.claude/
-.secrets.baseline
-scout_apm_debug.log
-
-# CodeGraph (local index — never commit)
-.codegraph/
-graphify
-sys
-graphify-out/
-
-# graphify (local knowledge graph — never commit)
-/graphify
-/sys
-.graphify_version
+1:# ── Python ────────────────────────────────────────────────────────────────────
+2:**/__pycache__/
+3:*.py[cod]
+4:*.py,cover
+5:*.cover
+6:*.coverage*
+7:.coverage
+8:.coverage.*
+9:htmlcov/
+10:
+11:# Egg / build / dist
+12:*.egg-info/
+13:dist/
+14:build/
+15:.eggs/
+16:
+17:# Virtual envs
+18:.venv/
+19:venv/
+20:env/
+21:
+22:# ── Tools ─────────────────────────────────────────────────────────────────────
+23:.ruff_cache/
+24:**/.*cache*/
+25:.mypy_cache/
+26:.pytest_cache/
+27:.trunk/
+28:
+29:# ── Editors / OS ──────────────────────────────────────────────────────────────
+30:.DS_Store
+31:.idea/
+32:.vscode/
+33:*.swp
+34:*.swo
+35:
+36:# ── Environment & secrets ─────────────────────────────────────────────────────
+37:.env
+38:.env.*
+39:!.env.example
+40:secrets.yaml
+41:
+42:# ── Docker runtime ────────────────────────────────────────────────────────────
+43:docker/entrypoints/bootstraped
+44:
+45:# ── Generated output ──────────────────────────────────────────────────────────
+46:out/
+47:reports/
+48:guidelines_report.html
+49:
+50:# ── TypeScript / Node ─────────────────────────────────────────────────────────
+51:node_modules/
+52:*.tsbuildinfo
+53:
+54:# ── CI / misc ─────────────────────────────────────────────────────────────────
+55:.git-branches.toml
+57:.secrets.baseline
+58:scout_apm_debug.log
+59:
+60:# CodeGraph (local index — never commit)
+61:.codegraph/
+62:graphify
+63:sys
+64:graphify-out/
+65:
+66:# graphify (local knowledge graph — never commit)
+67:/graphify
+68:/sys
+69:.graphify_version
+.claude/worktrees/
