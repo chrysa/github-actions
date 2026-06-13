@@ -1,0 +1,195 @@
+---
+# Reusable lean CI for chrysa Python SERVICE apps (docker-compose backed).
+#
+# Same shape as ci-python.yml, but tests run via `make docker-test` (the repo's
+# compose-backed suite) instead of a plain pytest matrix — for apps whose tests
+# need Postgres/Redis/etc. Coverage is best-effort: if `make docker-test` emits
+# coverage.xml to the workspace it is uploaded for Sonar; otherwise Sonar runs on
+# code + lint reports only. Auto-versioning stays in each repo's release.yml.
+#
+# Caller (repo/.github/workflows/ci.yml):
+#   jobs:
+#     ci:
+#       uses: chrysa/github-actions/.github/workflows/ci-python-app.yml@main
+#       with:
+#         sources: "app tests"
+#         typecheck-paths: app
+#         project-key: chrysa_my-app
+#         project-name: my-app
+#         sonar-sources: "."
+#       secrets: inherit
+
+name: CI (Python app)
+
+on:
+    workflow_call:
+        inputs:
+            sources:
+                description: Ruff sources, space-separated (e.g. "app tests")
+                type: string
+                required: true
+            typecheck-paths:
+                description: Path(s) mypy type-checks for the Sonar report (the package)
+                type: string
+                required: true
+            project-key:
+                description: SonarCloud project key (e.g. chrysa_my-app)
+                type: string
+                required: true
+            project-name:
+                description: SonarCloud project display name
+                type: string
+                required: true
+            tests:
+                description: Test directories, comma-separated
+                type: string
+                required: false
+                default: tests
+            sonar-sources:
+                description: Sonar sources dir
+                type: string
+                required: false
+                default: "."
+            latest-python:
+                description: Python version for lint/reports/sonar legs
+                type: string
+                required: false
+                default: "3.14"
+            extras:
+                description: Optional-dependencies extra to install (e.g. dev)
+                type: string
+                required: false
+                default: dev
+            sonar-organization:
+                description: SonarCloud organization slug
+                type: string
+                required: false
+                default: chrysa
+            run-sonar:
+                description: Run the SonarCloud scan job
+                type: boolean
+                required: false
+                default: true
+        secrets:
+            SONAR_TOKEN:
+                required: false
+
+permissions: {}
+
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    lint:
+        name: Pre-commit (lint/format/type/secrets/actionlint)
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+
+            - name: Setup environment
+              uses: chrysa/github-actions/tool-setup@v1.1.3
+              with:
+                  python-version: ${{ inputs.latest-python }}
+                  extras: ${{ inputs.extras }}
+
+            - uses: pre-commit/action@v3.0.1
+              with:
+                  extra_args: --all-files --hook-stage pre-push
+              env:
+                  SKIP: no-commit-to-branch
+
+    reports:
+        name: Lint reports for Sonar
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+
+            - name: Setup environment
+              uses: chrysa/github-actions/tool-setup@v1.1.3
+              with:
+                  python-version: ${{ inputs.latest-python }}
+                  extras: ${{ inputs.extras }}
+
+            - name: Ruff checks
+              uses: chrysa/github-actions/ruff-check@v1.1.3
+              with:
+                  python-version: ${{ inputs.latest-python }}
+                  latest-python: ${{ inputs.latest-python }}
+                  sources: ${{ inputs.sources }}
+
+            - name: Mypy report
+              run: |
+                  mkdir -p reports
+                  mypy --config-file=pyproject.toml ${{ inputs.typecheck-paths }} \
+                      | tee reports/mypy.txt || true
+              shell: bash
+
+            - name: Upload mypy report
+              uses: actions/upload-artifact@v7
+              with:
+                  name: mypy-report
+                  path: reports/mypy.txt
+
+    test:
+        name: Docker tests (compose)
+        runs-on: ubuntu-latest
+        timeout-minutes: 25
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+
+            - name: Run tests via Docker (compose)
+              run: make docker-test
+              shell: bash
+
+            # Best-effort: surface coverage.xml for Sonar if docker-test emitted it.
+            - name: Collect coverage report
+              if: always()
+              run: |
+                  mkdir -p reports
+                  cov=$(find . -maxdepth 3 -name coverage.xml -not -path './reports/*' | head -1)
+                  if [ -n "$cov" ]; then cp "$cov" reports/coverage.xml; echo "coverage.xml collected"; \
+                  else echo "no coverage.xml produced by docker-test"; fi
+              shell: bash
+
+            - name: Upload test results
+              if: always()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: test-results-${{ inputs.latest-python }}
+                  path: reports/
+                  if-no-files-found: ignore
+
+    sonar:
+        name: SonarCloud
+        if: ${{ inputs.run-sonar && github.actor != 'dependabot[bot]' }}
+        needs: [test, reports]
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: read
+            pull-requests: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+              with:
+                  fetch-depth: 0
+
+            - name: SonarCloud scan
+              uses: chrysa/github-actions/sonar-scan-python@v1.1.3
+              with:
+                  python-version: ${{ inputs.latest-python }}
+                  sonar-token: ${{ secrets.SONAR_TOKEN }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  project-key: ${{ inputs.project-key }}
+                  organization: ${{ inputs.sonar-organization }}
+                  project-name: ${{ inputs.project-name }}
+                  sources: ${{ inputs.sonar-sources }}
+                  tests: ${{ inputs.tests }}
