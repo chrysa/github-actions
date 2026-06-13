@@ -1,0 +1,208 @@
+---
+# Reusable lean CI for chrysa Python projects.
+#
+# The quality GATE is pre-commit (ruff, format, mypy, gitleaks, actionlint, the
+# chrysa/pre-commit-tools suite) — everything that can be a pre-commit hook is one,
+# replayed here in the `lint` job. CI keeps only the irreducible: the pre-commit
+# replay, machine-readable lint reports for Sonar, the test matrix (coverage), and
+# the SonarCloud scan. Auto-versioning stays in each repo's release.yml (GitVersion).
+#
+# Caller (repo/.github/workflows/ci.yml):
+#   jobs:
+#     ci:
+#       uses: chrysa/github-actions/.github/workflows/ci-python.yml@v1.1.3
+#       with:
+#         package: fastapi_app_generator
+#         sources: "src/fastapi_app_generator tests"
+#         project-key: chrysa_fastapi-app-generator
+#         project-name: fastapi-app-generator
+#       secrets: inherit
+
+name: CI (Python)
+
+on:
+    workflow_call:
+        inputs:
+            package:
+                description: Import package / coverage module (e.g. fastapi_app_generator)
+                type: string
+                required: true
+            sources:
+                description: Ruff sources, space-separated (e.g. "src/pkg tests")
+                type: string
+                required: true
+            project-key:
+                description: SonarCloud project key (e.g. chrysa_my-repo)
+                type: string
+                required: true
+            project-name:
+                description: SonarCloud project display name (e.g. my-repo)
+                type: string
+                required: true
+            tests:
+                description: Test directories, comma-separated
+                type: string
+                required: false
+                default: tests
+            sonar-sources:
+                description: Sonar sources dir
+                type: string
+                required: false
+                default: src
+            python-versions:
+                description: JSON array of Python versions for the test matrix
+                type: string
+                required: false
+                default: '["3.12", "3.14"]'
+            latest-python:
+                description: Latest Python version (coverage upload / report leg)
+                type: string
+                required: false
+                default: "3.14"
+            extras:
+                description: Optional-dependencies extra to install (e.g. dev)
+                type: string
+                required: false
+                default: dev
+            cov-fail-under:
+                description: Minimum coverage percentage (empty disables the gate)
+                type: string
+                required: false
+                default: "85"
+            sonar-organization:
+                description: SonarCloud organization slug
+                type: string
+                required: false
+                default: chrysa
+            run-sonar:
+                description: Run the SonarCloud scan job
+                type: boolean
+                required: false
+                default: true
+        secrets:
+            SONAR_TOKEN:
+                required: false
+
+permissions: {}
+
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    lint:
+        name: Pre-commit (lint/format/type/secrets/actionlint)
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+
+            - name: Setup environment
+              uses: chrysa/github-actions/tool-setup@v1.1.3
+              with:
+                  python-version: ${{ inputs.latest-python }}
+                  extras: ${{ inputs.extras }}
+
+            # Hooks without explicit `stages:` run at all stages; --hook-stage
+            # pre-push also covers mypy / regression-gate. One invocation = full surface.
+            - uses: pre-commit/action@v3.0.1
+              with:
+                  extra_args: --all-files --hook-stage pre-push
+              env:
+                  SKIP: no-commit-to-branch
+
+    reports:
+        name: Lint reports for Sonar
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+
+            - name: Setup environment
+              uses: chrysa/github-actions/tool-setup@v1.1.3
+              with:
+                  python-version: ${{ inputs.latest-python }}
+                  extras: ${{ inputs.extras }}
+
+            # Uploads the `ruff-report` artifact consumed by sonar-scan-python.
+            - name: Ruff checks
+              uses: chrysa/github-actions/ruff-check@v1.1.3
+              with:
+                  python-version: ${{ inputs.latest-python }}
+                  latest-python: ${{ inputs.latest-python }}
+                  sources: ${{ inputs.sources }}
+
+            - name: Mypy report
+              run: |
+                  mkdir -p reports
+                  mypy --config-file=pyproject.toml ${{ inputs.sonar-sources }} \
+                      | tee reports/mypy.txt || true
+              shell: bash
+
+            - name: Upload mypy report
+              uses: actions/upload-artifact@v7
+              with:
+                  name: mypy-report
+                  path: reports/mypy.txt
+
+    test:
+        name: Tests (py${{ matrix.python-version }})
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        permissions:
+            contents: read
+            checks: write
+            pull-requests: write
+        strategy:
+            fail-fast: false
+            matrix:
+                python-version: ${{ fromJSON(inputs.python-versions) }}
+        steps:
+            - uses: actions/checkout@v6.0.3
+
+            - name: Setup environment
+              uses: chrysa/github-actions/tool-setup@v1.1.3
+              with:
+                  python-version: ${{ matrix.python-version }}
+                  extras: ${{ inputs.extras }}
+
+            # Uploads `test-results-<py>` (coverage.xml + junit.xml).
+            - name: Run tests
+              uses: chrysa/github-actions/run-tests@v1.1.3
+              with:
+                  cov-module: ${{ inputs.package }}
+                  cov-fail-under: ${{ inputs.cov-fail-under }}
+                  python-version: ${{ matrix.python-version }}
+                  latest-python: ${{ inputs.latest-python }}
+
+    sonar:
+        name: SonarCloud
+        if: ${{ inputs.run-sonar && github.actor != 'dependabot[bot]' }}
+        needs: [test, reports]
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: read
+            pull-requests: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+              with:
+                  fetch-depth: 0
+
+            # Downloads test-results-<latest> (coverage + junit), ruff-report,
+            # mypy-report, then runs the scan. Needs the project + SONAR_TOKEN.
+            - name: SonarCloud scan
+              uses: chrysa/github-actions/sonar-scan-python@v1.1.3
+              with:
+                  python-version: ${{ inputs.latest-python }}
+                  sonar-token: ${{ secrets.SONAR_TOKEN }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  project-key: ${{ inputs.project-key }}
+                  organization: ${{ inputs.sonar-organization }}
+                  project-name: ${{ inputs.project-name }}
+                  sources: ${{ inputs.sonar-sources }}
+                  tests: ${{ inputs.tests }}
