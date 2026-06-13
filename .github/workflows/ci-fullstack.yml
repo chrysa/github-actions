@@ -1,0 +1,149 @@
+---
+# Reusable lean CI for chrysa FULLSTACK monorepos (Python backend + Node/React
+# frontend). Stacks vary per repo, so this orchestrates the §1 Makefile contract
+# rather than hardcoding stack steps: every fullstack repo exposes `install`,
+# `pre-commit`, a test target (`docker-test` by default), and `build`.
+#
+# Quality GATE = `make pre-commit` (the repo's own hook set: ruff/mypy/eslint/tsc/
+# gitleaks/...). Tests via `make <test-target>`. Sonar scans the whole repo.
+# Auto-versioning stays in each repo's release.yml (GitVersion).
+#
+# Caller (repo/.github/workflows/ci.yml):
+#   jobs:
+#     ci:
+#       uses: chrysa/github-actions/.github/workflows/ci-fullstack.yml@main
+#       with:
+#         project-key: chrysa_my-monorepo
+#         project-name: my-monorepo
+#         test-target: docker-test     # or test-cov where no compose tests
+#       secrets: inherit
+
+name: CI (fullstack)
+
+on:
+    workflow_call:
+        inputs:
+            project-key:
+                description: SonarCloud project key (e.g. chrysa_my-monorepo)
+                type: string
+                required: true
+            project-name:
+                description: SonarCloud project display name
+                type: string
+                required: true
+            test-target:
+                description: Makefile target that runs the test suite
+                type: string
+                required: false
+                default: docker-test
+            sonar-sources:
+                description: Sonar sources dir
+                type: string
+                required: false
+                default: "."
+            python-version:
+                type: string
+                required: false
+                default: "3.14"
+            node-version:
+                type: string
+                required: false
+                default: "22"
+            sonar-organization:
+                type: string
+                required: false
+                default: chrysa
+            run-sonar:
+                type: boolean
+                required: false
+                default: true
+        secrets:
+            SONAR_TOKEN:
+                required: false
+
+permissions: {}
+
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    gate:
+        name: Pre-commit (lint/format/type/secrets, both stacks)
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+            - uses: actions/setup-python@v6
+              with:
+                  python-version: ${{ inputs.python-version }}
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ inputs.node-version }}
+            - name: Install toolchain
+              run: make install
+              shell: bash
+            - name: Pre-commit gate
+              run: SKIP=no-commit-to-branch make pre-commit
+              shell: bash
+
+    test:
+        name: Tests (make ${{ inputs.test-target }})
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+            - uses: actions/setup-python@v6
+              with:
+                  python-version: ${{ inputs.python-version }}
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ inputs.node-version }}
+            - name: Run test suite
+              run: make ${{ inputs.test-target }}
+              shell: bash
+            - name: Collect coverage reports
+              if: always()
+              run: |
+                  mkdir -p reports
+                  pyc=$(find . -maxdepth 4 -name coverage.xml -not -path './reports/*' | head -1)
+                  [ -n "$pyc" ] && cp "$pyc" reports/coverage.xml || true
+                  lcov=$(find . -maxdepth 5 -name lcov.info -not -path '*/node_modules/*' | head -1)
+                  [ -n "$lcov" ] && cp "$lcov" reports/lcov.info || true
+                  ls -lh reports/ || true
+              shell: bash
+            - name: Upload coverage
+              if: always()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: test-results-${{ inputs.python-version }}
+                  path: reports/
+                  if-no-files-found: ignore
+
+    sonar:
+        name: SonarCloud
+        if: ${{ inputs.run-sonar && github.actor != 'dependabot[bot]' }}
+        needs: [test, gate]
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: read
+            pull-requests: read
+        steps:
+            - uses: actions/checkout@v6.0.3
+              with:
+                  fetch-depth: 0
+            - name: SonarCloud scan
+              uses: chrysa/github-actions/sonar-scan-python@v1.1.3
+              with:
+                  python-version: ${{ inputs.python-version }}
+                  sonar-token: ${{ secrets.SONAR_TOKEN }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  project-key: ${{ inputs.project-key }}
+                  organization: ${{ inputs.sonar-organization }}
+                  project-name: ${{ inputs.project-name }}
+                  sources: ${{ inputs.sonar-sources }}
