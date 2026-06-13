@@ -49,6 +49,11 @@ on:
                 type: string
                 required: false
                 default: src
+            typecheck-paths:
+                description: Path(s) mypy type-checks for the Sonar report (the package)
+                type: string
+                required: false
+                default: src
             python-versions:
                 description: JSON array of Python versions for the test matrix
                 type: string
@@ -139,7 +144,7 @@ jobs:
             - name: Mypy report
               run: |
                   mkdir -p reports
-                  mypy --config-file=pyproject.toml ${{ inputs.sonar-sources }} \
+                  mypy --config-file=pyproject.toml ${{ inputs.typecheck-paths }} \
                       | tee reports/mypy.txt || true
               shell: bash
 
