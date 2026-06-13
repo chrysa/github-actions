@@ -1,0 +1,230 @@
+---
+# Reusable deploy: build + push container image(s) to GHCR, then (optionally) bump
+# the image tags in chrysa/catalog so ArgoCD rolls out the new version.
+#
+# Generalizes the per-repo deploy.yml: a repo becomes a thin caller fired on release.
+#
+# Caller (repo/.github/workflows/deploy.yml):
+#   on:
+#     release: { types: [published] }
+#     workflow_dispatch: { inputs: { tag: { required: true } } }
+#   jobs:
+#     deploy:
+#       uses: chrysa/github-actions/.github/workflows/deploy.yml@main
+#       with:
+#         image-base: ghcr.io/chrysa/my-app
+#         backend-context: backend            # '.' for single-package repos
+#         build-frontend: true                # omit/false for backend-only
+#         frontend-image: ghcr.io/chrysa/my-app-frontend
+#         gitops: true
+#         api-values-path: apps/dev/my-app-api/values.yaml
+#         app-values-path: apps/dev/my-app-app/values.yaml
+#       secrets:
+#         release-token: ${{ secrets.RELEASE_TOKEN }}   # catalog write (gitops only)
+
+name: Deploy (build + push + gitops)
+
+on:
+    workflow_call:
+        inputs:
+            image-base:
+                description: Backend image, e.g. ghcr.io/chrysa/my-app
+                type: string
+                required: true
+            tag:
+                description: Image tag (workflow_dispatch); on release the tag name is used
+                type: string
+                required: false
+                default: ''
+            backend-context:
+                description: Docker build context for the backend
+                type: string
+                required: false
+                default: .
+            backend-dockerfile:
+                description: Backend Dockerfile path
+                type: string
+                required: false
+                default: Dockerfile
+            target:
+                description: Dockerfile target stage to build
+                type: string
+                required: false
+                default: production
+            build-frontend:
+                description: Also build + push a frontend image
+                type: boolean
+                required: false
+                default: false
+            frontend-image:
+                description: Frontend image, e.g. ghcr.io/chrysa/my-app-frontend
+                type: string
+                required: false
+                default: ''
+            frontend-context:
+                type: string
+                required: false
+                default: frontend
+            frontend-dockerfile:
+                type: string
+                required: false
+                default: frontend/Dockerfile
+            gitops:
+                description: Bump image tags in chrysa/catalog after build
+                type: boolean
+                required: false
+                default: false
+            catalog-repo:
+                type: string
+                required: false
+                default: chrysa/catalog
+            api-values-path:
+                description: catalog values.yaml whose image-base tag to bump
+                type: string
+                required: false
+                default: ''
+            app-values-path:
+                description: catalog values.yaml whose frontend-image tag to bump
+                type: string
+                required: false
+                default: ''
+        secrets:
+            release-token:
+                description: PAT with write access to the catalog repo (gitops only)
+                required: false
+
+permissions:
+    contents: read
+    packages: write
+
+concurrency:
+    group: deploy-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    build-backend:
+        name: Build & push backend
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v6.0.3
+            - name: Log in to GHCR
+              uses: docker/login-action@v4.2.0
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+            - uses: docker/setup-buildx-action@v4
+            - name: Resolve version
+              id: version
+              run: echo "value=${{ github.event.release.tag_name || inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+              shell: bash
+            - name: Metadata
+              id: meta
+              uses: docker/metadata-action@v6
+              with:
+                  images: ${{ inputs.image-base }}
+                  tags: |
+                      type=raw,value=latest
+                      type=raw,value=${{ steps.version.outputs.value }}
+                      type=sha,prefix=sha-
+            - name: Build and push
+              uses: docker/build-push-action@v7.2.0
+              with:
+                  context: ${{ inputs.backend-context }}
+                  file: ${{ inputs.backend-dockerfile }}
+                  target: ${{ inputs.target }}
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+    build-frontend:
+        name: Build & push frontend
+        if: ${{ inputs.build-frontend }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v6.0.3
+            - name: Log in to GHCR
+              uses: docker/login-action@v4.2.0
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+            - uses: docker/setup-buildx-action@v4
+            - name: Resolve version
+              id: version
+              run: echo "value=${{ github.event.release.tag_name || inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+              shell: bash
+            - name: Metadata
+              id: meta
+              uses: docker/metadata-action@v6
+              with:
+                  images: ${{ inputs.frontend-image }}
+                  tags: |
+                      type=raw,value=latest
+                      type=raw,value=${{ steps.version.outputs.value }}
+                      type=sha,prefix=sha-
+            - name: Build and push
+              uses: docker/build-push-action@v7.2.0
+              with:
+                  context: ${{ inputs.frontend-context }}
+                  file: ${{ inputs.frontend-dockerfile }}
+                  target: ${{ inputs.target }}
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+    gitops:
+        name: GitOps — bump catalog image tags
+        if: ${{ inputs.gitops && always() }}
+        needs: [build-backend, build-frontend]
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Guard — backend must have succeeded
+              if: ${{ needs.build-backend.result != 'success' }}
+              run: echo "backend build failed — skipping gitops" && exit 1
+              shell: bash
+            - name: Resolve version
+              id: version
+              run: echo "value=${{ github.event.release.tag_name || inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+              shell: bash
+            - name: Checkout catalog
+              uses: actions/checkout@v6.0.3
+              with:
+                  repository: ${{ inputs.catalog-repo }}
+                  token: ${{ secrets.release-token }}
+                  path: catalog
+            - name: Bump image tags
+              env:
+                  VERSION: ${{ steps.version.outputs.value }}
+                  IMAGE_BASE: ${{ inputs.image-base }}
+                  FRONTEND_IMAGE: ${{ inputs.frontend-image }}
+                  API_VALUES: ${{ inputs.api-values-path }}
+                  APP_VALUES: ${{ inputs.app-values-path }}
+              run: |
+                  esc() { printf '%s' "$1" | sed 's/[\/&]/\\&/g'; }
+                  if [ -n "$API_VALUES" ] && [ -f "catalog/$API_VALUES" ]; then
+                    sed -i "/repository: $(esc "$IMAGE_BASE")\$/{n; s/tag: .*/tag: ${VERSION}/}" "catalog/$API_VALUES"
+                  fi
+                  if [ -n "$FRONTEND_IMAGE" ] && [ -n "$APP_VALUES" ] && [ -f "catalog/$APP_VALUES" ]; then
+                    sed -i "/repository: $(esc "$FRONTEND_IMAGE")/{n; s/tag: .*/tag: ${VERSION}/}" "catalog/$APP_VALUES"
+                  fi
+                  grep -R "tag:" "catalog/$API_VALUES" ${APP_VALUES:+"catalog/$APP_VALUES"} || true
+              shell: bash
+            - name: Commit and push
+              env:
+                  VERSION: ${{ steps.version.outputs.value }}
+              run: |
+                  cd catalog
+                  git config user.name chrysa
+                  git config user.email greau.anthony+chrysa@gmail.com
+                  git add -A
+                  git diff --staged --quiet || git commit -m "chore: bump ${{ github.event.repository.name }} images to ${VERSION} [skip ci]"
+                  git push
+              shell: bash
