@@ -69,6 +69,16 @@ on:
                 type: string
                 required: false
                 default: frontend/Dockerfile
+            backend-build-args:
+                description: Newline-separated build args for the backend image (KEY=value)
+                type: string
+                required: false
+                default: ''
+            frontend-build-args:
+                description: Newline-separated build args for the frontend image (KEY=value)
+                type: string
+                required: false
+                default: ''
             gitops:
                 description: Bump image tags in chrysa/catalog after build
                 type: boolean
@@ -134,6 +144,7 @@ jobs:
                   context: ${{ inputs.backend-context }}
                   file: ${{ inputs.backend-dockerfile }}
                   target: ${{ inputs.target }}
+                  build-args: ${{ inputs.backend-build-args }}
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
@@ -173,6 +184,7 @@ jobs:
                   context: ${{ inputs.frontend-context }}
                   file: ${{ inputs.frontend-dockerfile }}
                   target: ${{ inputs.target }}
+                  build-args: ${{ inputs.frontend-build-args }}
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
