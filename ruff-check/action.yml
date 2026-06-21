@@ -20,17 +20,32 @@ inputs:
 name: Ruff check
 runs:
   steps:
+  - name: "ruff — ensure available"
+    run: 'if ! command -v ruff >/dev/null 2>&1; then
+
+      echo "::warning::ruff not found on PATH; installing a fallback. Declare ruff
+      in your project''s [lint] extra to pin a version."
+
+      python -m pip install ruff
+
+      fi
+
+      ruff --version
+
+      '
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
   - env:
       RUFF_CONFIG: ${{ inputs.config }}
       RUFF_SOURCES: ${{ inputs.sources }}
-    name: "ruff \u2014 lint check"
+    name: "ruff — lint check"
     run: ruff check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
     shell: bash
     working-directory: ${{ inputs.working-directory }}
   - env:
       RUFF_CONFIG: ${{ inputs.config }}
       RUFF_SOURCES: ${{ inputs.sources }}
-    name: "ruff \u2014 format check"
+    name: "ruff — format check"
     run: ruff format --check --config="${RUFF_CONFIG}" ${RUFF_SOURCES}
     shell: bash
     working-directory: ${{ inputs.working-directory }}
@@ -38,7 +53,7 @@ runs:
       RUFF_CONFIG: ${{ inputs.config }}
       RUFF_SOURCES: ${{ inputs.sources }}
     if: always() && inputs.python-version == inputs.latest-python
-    name: "ruff \u2014 produce JSON report"
+    name: "ruff — produce JSON report"
     run: 'mkdir -p reports
 
       ruff check --config="${RUFF_CONFIG}" --output-format=json ${RUFF_SOURCES} >
