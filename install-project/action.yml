@@ -5,7 +5,7 @@ inputs:
     description: Comma-separated extras to install (e.g. lint,test,dead_code)
     required: false
   working-directory:
-    default: '.'
+    default: .
     description: Working directory to run pip install from (e.g. backend for monorepos)
     required: false
 name: Install project
