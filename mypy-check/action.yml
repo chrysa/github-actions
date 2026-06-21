@@ -16,17 +16,31 @@ inputs:
 name: Mypy check
 runs:
   steps:
+  - name: "mypy — ensure available"
+    run: 'if ! command -v mypy >/dev/null 2>&1; then
+
+      echo "::warning::mypy not found on PATH; installing a fallback. Declare mypy
+      in your project''s [lint] extra to pin a version."
+
+      python -m pip install mypy
+
+      fi
+
+      mypy --version
+
+      '
+    shell: bash
   - env:
       MYPY_CONFIG: ${{ inputs.config-file }}
       MYPY_SOURCES: ${{ inputs.sources }}
-    name: "mypy \u2014 type check"
+    name: "mypy — type check"
     run: mypy --config-file="${MYPY_CONFIG}" ${MYPY_SOURCES}
     shell: bash
   - env:
       MYPY_CONFIG: ${{ inputs.config-file }}
       MYPY_SOURCES: ${{ inputs.sources }}
     if: always() && inputs.python-version == inputs.latest-python
-    name: "mypy \u2014 produce text report"
+    name: "mypy — produce text report"
     run: 'mkdir -p reports
 
       mypy --config-file="${MYPY_CONFIG}" --no-error-summary ${MYPY_SOURCES} > reports/mypy.txt
