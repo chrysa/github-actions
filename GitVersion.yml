@@ -19,6 +19,10 @@ branches:
     mode: ContinuousDelivery
     regex: ^main$
     tag: ''
+# One-time floor to unstick self-versioning: the v1.2.1 tag was cut on an
+# off-mainline commit, so GitVersion keeps recomputing 1.2.1 (already taken)
+# and never advances. Floor to 1.2.2 to cut the next mainline tag cleanly.
+next-version: 1.2.2
 increment: Inherit
 major-version-bump-message: ^(feat|fix|refactor)(\(.+\))?!:.+
 minor-version-bump-message: ^feat(\(.+\))?:.+
