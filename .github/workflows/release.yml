@@ -33,7 +33,7 @@ jobs:
             - name: Generate changelog
               id: changelog
               run: |
-                  CURRENT_TAG="v${{ steps.gitversion.outputs.semVer }}"
+                  CURRENT_TAG="v${{ steps.gitversion.outputs.majorMinorPatch }}"
                   git cliff --output CHANGELOG_RELEASE.md --tag "$CURRENT_TAG" 2>/dev/null || \
                     git cliff --unreleased --output CHANGELOG_RELEASE.md
                   echo "version=$CURRENT_TAG" >> "$GITHUB_OUTPUT"
