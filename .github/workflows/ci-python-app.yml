@@ -125,9 +125,12 @@ jobs:
                   sources: ${{ inputs.sources }}
 
             - name: Mypy report
+              env:
+                  TYPECHECK_PATHS: ${{ inputs.typecheck-paths }}
               run: |
                   mkdir -p reports
-                  mypy --config-file=pyproject.toml ${{ inputs.typecheck-paths }} \
+                  # shellcheck disable=SC2086 # paths may be space-separated; word-splitting is intended
+                  mypy --config-file=pyproject.toml ${TYPECHECK_PATHS} \
                       | tee reports/mypy.txt || true
               shell: bash
 
