@@ -104,7 +104,9 @@ jobs:
               with:
                   node-version: ${{ inputs.node-version }}
             - name: Run test suite
-              run: make ${{ inputs.test-target }}
+              env:
+                  TEST_TARGET: ${{ inputs.test-target }}
+              run: make "$TEST_TARGET"
               shell: bash
             - name: Collect coverage reports
               if: always()
