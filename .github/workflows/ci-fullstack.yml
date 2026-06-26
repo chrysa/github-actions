@@ -85,6 +85,11 @@ jobs:
             - name: Install toolchain
               run: make install
               shell: bash
+            # `make pre-commit` calls the `pre-commit` binary, which the repos'
+            # `make install` does not provide. Install it here so the gate runs.
+            - name: Ensure pre-commit is available
+              run: python -m pip install --quiet pre-commit
+              shell: bash
             - name: Pre-commit gate
               run: SKIP=no-commit-to-branch make pre-commit
               shell: bash
