@@ -32,7 +32,12 @@ jobs:
           if [ -f package.json ]; then npm ci; fi
       - name: Run quality gate verification
         id: quality-gate
-        run: make quality-gate-verify || exit_code=$?; exit "${exit_code:-0}"
+        run: |
+          if make -n quality-gate-verify >/dev/null 2>&1; then
+            make quality-gate-verify
+          else
+            echo "::notice::No 'quality-gate-verify' target found - skipping quality gate (repo not onboarded)."
+          fi
       - name: Report quality gate status
         if: always()
         run: |
