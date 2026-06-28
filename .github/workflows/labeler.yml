@@ -1,11 +1,16 @@
 "on":
   pull_request: null
-  workflow_call: null
+  workflow_call:
+    inputs:
+      runner:
+        description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
+        type: string
+        default: chrysa-arc
   workflow_dispatch: null
 jobs:
   labels:
     name: Apply labels on pull request
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'chrysa-arc' }}
     steps:
     - name: Get Code
       uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0

@@ -3,6 +3,11 @@ name: Dependabot Auto-merge
 
 on:
     workflow_call:
+        inputs:
+            runner:
+                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
+                type: string
+                default: chrysa-arc
 
 permissions:
     contents: write
@@ -10,7 +15,7 @@ permissions:
 
 jobs:
     auto-merge:
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         if: github.actor == 'dependabot[bot]'
         steps:
             - name: Fetch Dependabot metadata

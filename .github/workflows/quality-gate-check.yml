@@ -3,6 +3,11 @@ name: Quality Gate Check
 
 on:
   workflow_call:
+    inputs:
+      runner:
+        description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
+        type: string
+        default: chrysa-arc
 
 permissions:
   checks: write
@@ -12,7 +17,7 @@ permissions:
 jobs:
   quality-gate:
     name: No-Regression Quality Gates
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner || 'chrysa-arc' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7.0.0
