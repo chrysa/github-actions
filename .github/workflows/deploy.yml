@@ -103,6 +103,10 @@ on:
                 type: string
                 required: false
                 default: ''
+            runner:
+                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
+                type: string
+                default: chrysa-arc
         secrets:
             release-token:
                 description: PAT with write access to the catalog repo (gitops only)
@@ -119,7 +123,7 @@ concurrency:
 jobs:
     build-backend:
         name: Build & push backend
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 30
         steps:
             - uses: actions/checkout@v7.0.0
@@ -159,7 +163,7 @@ jobs:
     build-frontend:
         name: Build & push frontend
         if: ${{ inputs.build-frontend }}
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 30
         steps:
             - uses: actions/checkout@v7.0.0
@@ -200,7 +204,7 @@ jobs:
         name: GitOps — bump catalog image tags
         if: ${{ inputs.gitops && always() }}
         needs: [build-backend, build-frontend]
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 10
         steps:
             - name: Guard — backend must have succeeded

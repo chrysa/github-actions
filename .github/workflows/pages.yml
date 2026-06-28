@@ -3,6 +3,11 @@ name: GitHub Pages — Documentation
 
 on:
     workflow_call:
+        inputs:
+            runner:
+                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
+                type: string
+                default: chrysa-arc
 
 concurrency:
     group: pages-${{ github.ref }}
@@ -16,7 +21,7 @@ permissions:
 jobs:
     pages:
         name: Build and deploy docs
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@v7.0.0
