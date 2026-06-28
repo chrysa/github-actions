@@ -17,7 +17,7 @@ permissions:
 
 jobs:
     check_dependencies:
-        runs-on: ${{ inputs.runner }}
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         name: Check PR dependencies
 
         steps:

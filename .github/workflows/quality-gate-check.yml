@@ -17,7 +17,7 @@ permissions:
 jobs:
   quality-gate:
     name: No-Regression Quality Gates
-    runs-on: ${{ inputs.runner }}
+    runs-on: ${{ inputs.runner || 'chrysa-arc' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7.0.0

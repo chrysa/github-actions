@@ -21,7 +21,7 @@ permissions:
 jobs:
     pages:
         name: Build and deploy docs
-        runs-on: ${{ inputs.runner }}
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 10
         steps:
             - uses: actions/checkout@v7.0.0

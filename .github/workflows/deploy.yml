@@ -123,7 +123,7 @@ concurrency:
 jobs:
     build-backend:
         name: Build & push backend
-        runs-on: ${{ inputs.runner }}
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 30
         steps:
             - uses: actions/checkout@v7.0.0
@@ -163,7 +163,7 @@ jobs:
     build-frontend:
         name: Build & push frontend
         if: ${{ inputs.build-frontend }}
-        runs-on: ${{ inputs.runner }}
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 30
         steps:
             - uses: actions/checkout@v7.0.0
@@ -204,7 +204,7 @@ jobs:
         name: GitOps — bump catalog image tags
         if: ${{ inputs.gitops && always() }}
         needs: [build-backend, build-frontend]
-        runs-on: ${{ inputs.runner }}
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 10
         steps:
             - name: Guard — backend must have succeeded

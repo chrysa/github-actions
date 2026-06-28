@@ -87,7 +87,7 @@ concurrency:
 jobs:
     lint:
         name: Pre-commit (lint/format/type/secrets/actionlint)
-        runs-on: ${{ inputs.runner }}
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 15
         permissions:
             contents: read
@@ -108,7 +108,7 @@ jobs:
 
     reports:
         name: Lint reports for Sonar
-        runs-on: ${{ inputs.runner }}
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 15
         permissions:
             contents: read
@@ -146,7 +146,7 @@ jobs:
 
     test:
         name: Docker tests (compose)
-        runs-on: ${{ inputs.runner }}
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 25
         permissions:
             contents: read
@@ -179,7 +179,7 @@ jobs:
         name: SonarCloud
         if: ${{ inputs.run-sonar && github.actor != 'dependabot[bot]' }}
         needs: [test, reports]
-        runs-on: ${{ inputs.runner }}
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 15
         permissions:
             contents: read

@@ -22,7 +22,7 @@
 jobs:
   check_dependencies:
     name: Check Dependencies
-    runs-on: ${{ inputs.runner }}
+    runs-on: ${{ inputs.runner || 'chrysa-arc' }}
     steps:
     - env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
