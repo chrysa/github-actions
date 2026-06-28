@@ -57,6 +57,10 @@ on:
                 type: boolean
                 required: false
                 default: true
+            runner:
+                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
+                type: string
+                default: chrysa-arc
         secrets:
             SONAR_TOKEN:
                 required: false
@@ -70,7 +74,7 @@ concurrency:
 jobs:
     gate:
         name: Pre-commit (lint/format/type/secrets, both stacks)
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 20
         permissions:
             contents: read
@@ -96,7 +100,7 @@ jobs:
 
     test:
         name: Tests (make ${{ inputs.test-target }})
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 30
         permissions:
             contents: read
@@ -135,7 +139,7 @@ jobs:
         name: SonarCloud
         if: ${{ inputs.run-sonar && github.actor != 'dependabot[bot]' }}
         needs: [test, gate]
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
         timeout-minutes: 15
         permissions:
             contents: read
