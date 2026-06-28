@@ -3,6 +3,11 @@ name: pre-commit
 
 on:
     workflow_call:
+        inputs:
+            runner:
+                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
+                type: string
+                default: chrysa-arc
 
 permissions:
     contents: read
@@ -10,7 +15,7 @@ permissions:
 jobs:
     pre-commit:
         name: Run pre-commit hooks
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner }}
         timeout-minutes: 15
         steps:
             - uses: actions/checkout@v7.0.0

@@ -3,6 +3,11 @@ name: PR Dependency Check
 
 on:
     workflow_call:
+        inputs:
+            runner:
+                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
+                type: string
+                default: chrysa-arc
     pull_request_target:
         types: [closed, edited, opened, reopened]
 
@@ -12,7 +17,7 @@ permissions:
 
 jobs:
     check_dependencies:
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner }}
         name: Check PR dependencies
 
         steps:

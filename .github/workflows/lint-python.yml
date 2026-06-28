@@ -12,6 +12,10 @@ on:
                 type: string
                 required: false
                 default: "dev"
+            runner:
+                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
+                type: string
+                default: chrysa-arc
 
 permissions:
     contents: read
@@ -19,7 +23,7 @@ permissions:
 jobs:
     lint:
         name: Ruff + Mypy (pre-commit)
-        runs-on: ubuntu-latest
+        runs-on: ${{ inputs.runner }}
         timeout-minutes: 15
         steps:
             - uses: actions/checkout@v7.0.0
