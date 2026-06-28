@@ -42,8 +42,12 @@ pre-commit hooks, with the release gate as the final safety net.
 **Status**: accepted
 
 All reusable workflows (`workflow_call`) in this repository now expose a `runner`
-input (type: string, default: `chrysa-arc`) and set `runs-on: ${{ inputs.runner }}`
-on every job. The self-hosted label `chrysa-arc` is the fleet label for ARC
+input (type: string, default: `chrysa-arc`) and set
+`runs-on: ${{ inputs.runner || 'chrysa-arc' }}` on every job. The explicit
+`|| 'chrysa-arc'` fallback keeps the self-hosted default even on non-`workflow_call`
+trigger paths (e.g. `pull_request_target`, `schedule`), where the input default does
+not apply and `inputs.runner` would otherwise be the empty string. The self-hosted
+label `chrysa-arc` is the fleet label for ARC
 (Actions Runner Controller) runners deployed on the chrysa Kimsufi host.
 
 **Rationale for the public/private split:**
