@@ -4,7 +4,7 @@ fail_fast: false
 minimum_pre_commit_version: 4.1.0
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: fa6b006f0e53d6c0a4a30d6f7b1200a899444634
+  rev: v6.0.0
   hooks:
   - id: check-json
   - id: check-yaml
@@ -17,7 +17,7 @@ repos:
     - --branch
     - main
 - repo: https://github.com/igorshubovych/markdownlint-cli
-  rev: a4d5d37e66ebcd6b3705204a1d6dbb56dea66338
+  rev: v0.49.0
   hooks:
   - id: markdownlint
     args:
@@ -25,14 +25,14 @@ repos:
     stages:
     - manual
 - repo: https://github.com/lovesegfault/beautysh
-  rev: 34c3b3da0233e76d7d1ad90a78f3679185ecf31c
+  rev: v6.4.3
   hooks:
   - id: beautysh
     args:
     - --indent-size
     - '4'
 - repo: https://github.com/openstack/bashate
-  rev: ec2f2400915200d633299612a02d7d285e4be24c
+  rev: 2.1.1
   hooks:
   - id: bashate
     args:
@@ -69,6 +69,6 @@ repos:
     - revert
     - ci
 - repo: https://github.com/gitleaks/gitleaks
-  rev: v8.30.1
+  rev: v8.30.0
   hooks:
   - id: gitleaks
