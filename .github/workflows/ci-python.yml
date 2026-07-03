@@ -109,7 +109,7 @@ jobs:
             - uses: actions/checkout@v7.0.0
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.2.1
+              uses: chrysa/github-actions/tool-setup@v1.2.3
               with:
                   python-version: ${{ inputs.latest-python }}
                   extras: ${{ inputs.extras }}
@@ -132,14 +132,14 @@ jobs:
             - uses: actions/checkout@v7.0.0
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.2.1
+              uses: chrysa/github-actions/tool-setup@v1.2.3
               with:
                   python-version: ${{ inputs.latest-python }}
                   extras: ${{ inputs.extras }}
 
             # Uploads the `ruff-report` artifact consumed by sonar-scan-python.
             - name: Ruff checks
-              uses: chrysa/github-actions/ruff-check@v1.2.1
+              uses: chrysa/github-actions/ruff-check@v1.2.3
               with:
                   python-version: ${{ inputs.latest-python }}
                   latest-python: ${{ inputs.latest-python }}
@@ -177,14 +177,14 @@ jobs:
             - uses: actions/checkout@v7.0.0
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.2.1
+              uses: chrysa/github-actions/tool-setup@v1.2.3
               with:
                   python-version: ${{ matrix.python-version }}
                   extras: ${{ inputs.extras }}
 
             # Uploads `test-results-<py>` (coverage.xml + junit.xml).
             - name: Run tests
-              uses: chrysa/github-actions/run-tests@v1.2.1
+              uses: chrysa/github-actions/run-tests@v1.2.3
               with:
                   cov-module: ${{ inputs.package }}
                   cov-fail-under: ${{ inputs.cov-fail-under }}
@@ -208,7 +208,7 @@ jobs:
             # Downloads test-results-<latest> (coverage + junit), ruff-report,
             # mypy-report, then runs the scan. Needs the project + SONAR_TOKEN.
             - name: SonarCloud scan
-              uses: chrysa/github-actions/sonar-scan-python@v1.2.1
+              uses: chrysa/github-actions/sonar-scan-python@v1.2.3
               with:
                   python-version: ${{ inputs.latest-python }}
                   sonar-token: ${{ secrets.SONAR_TOKEN }}

@@ -133,14 +133,14 @@ jobs:
                   registry: ghcr.io
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
-            - uses: docker/setup-buildx-action@v4
+            - uses: docker/setup-buildx-action@v4.1.0
             - name: Resolve version
               id: version
               run: echo "value=${{ github.event.release.tag_name || inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
               shell: bash
             - name: Metadata
               id: meta
-              uses: docker/metadata-action@v6
+              uses: docker/metadata-action@v6.1.0
               with:
                   images: ${{ inputs.image-base }}
                   tags: |
@@ -173,14 +173,14 @@ jobs:
                   registry: ghcr.io
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
-            - uses: docker/setup-buildx-action@v4
+            - uses: docker/setup-buildx-action@v4.1.0
             - name: Resolve version
               id: version
               run: echo "value=${{ github.event.release.tag_name || inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
               shell: bash
             - name: Metadata
               id: meta
-              uses: docker/metadata-action@v6
+              uses: docker/metadata-action@v6.1.0
               with:
                   images: ${{ inputs.frontend-image }}
                   tags: |
