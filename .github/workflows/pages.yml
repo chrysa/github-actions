@@ -3,11 +3,6 @@ name: GitHub Pages — Documentation
 
 on:
     workflow_call:
-        inputs:
-            runner:
-                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
-                type: string
-                default: chrysa-arc
 
 concurrency:
     group: pages-${{ github.ref }}
@@ -21,13 +16,13 @@ permissions:
 jobs:
     pages:
         name: Build and deploy docs
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
 
             - name: Set up Python 3.14
-              uses: actions/setup-python@v6.3.0
+              uses: actions/setup-python@v6.2.0
               with:
                   python-version: '3.14'
 

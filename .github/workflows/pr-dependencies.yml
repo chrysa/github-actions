@@ -12,20 +12,12 @@
     - synchronize
   schedule:
   - cron: 0 0 * * *
-  workflow_call:
-    inputs:
-      runner:
-        description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
-        type: string
-        default: chrysa-arc
+  workflow_call: null
   workflow_dispatch: null
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
   check_dependencies:
     name: Check Dependencies
-    runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+    runs-on: ubuntu-latest
     steps:
     - env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
