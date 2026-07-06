@@ -84,10 +84,6 @@ on:
                 type: boolean
                 required: false
                 default: true
-            runner:
-                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
-                type: string
-                default: chrysa-arc
         secrets:
             SONAR_TOKEN:
                 required: false
@@ -101,15 +97,15 @@ concurrency:
 jobs:
     lint:
         name: Pre-commit (lint/format/type/secrets/actionlint)
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 15
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.2.3
+              uses: chrysa/github-actions/tool-setup@v1.1.3
               with:
                   python-version: ${{ inputs.latest-python }}
                   extras: ${{ inputs.extras }}
@@ -124,34 +120,31 @@ jobs:
 
     reports:
         name: Lint reports for Sonar
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 15
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.2.3
+              uses: chrysa/github-actions/tool-setup@v1.1.3
               with:
                   python-version: ${{ inputs.latest-python }}
                   extras: ${{ inputs.extras }}
 
             # Uploads the `ruff-report` artifact consumed by sonar-scan-python.
             - name: Ruff checks
-              uses: chrysa/github-actions/ruff-check@v1.2.3
+              uses: chrysa/github-actions/ruff-check@v1.1.3
               with:
                   python-version: ${{ inputs.latest-python }}
                   latest-python: ${{ inputs.latest-python }}
                   sources: ${{ inputs.sources }}
 
             - name: Mypy report
-              env:
-                  TYPECHECK_PATHS: ${{ inputs.typecheck-paths }}
               run: |
                   mkdir -p reports
-                  # shellcheck disable=SC2086 # paths may be space-separated; word-splitting is intended
-                  mypy --config-file=pyproject.toml ${TYPECHECK_PATHS} \
+                  mypy --config-file=pyproject.toml ${{ inputs.typecheck-paths }} \
                       | tee reports/mypy.txt || true
               shell: bash
 
@@ -163,7 +156,7 @@ jobs:
 
     test:
         name: Tests (py${{ matrix.python-version }})
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 20
         permissions:
             contents: read
@@ -174,17 +167,17 @@ jobs:
             matrix:
                 python-version: ${{ fromJSON(inputs.python-versions) }}
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.2.3
+              uses: chrysa/github-actions/tool-setup@v1.1.3
               with:
                   python-version: ${{ matrix.python-version }}
                   extras: ${{ inputs.extras }}
 
             # Uploads `test-results-<py>` (coverage.xml + junit.xml).
             - name: Run tests
-              uses: chrysa/github-actions/run-tests@v1.2.3
+              uses: chrysa/github-actions/run-tests@v1.1.3
               with:
                   cov-module: ${{ inputs.package }}
                   cov-fail-under: ${{ inputs.cov-fail-under }}
@@ -195,20 +188,20 @@ jobs:
         name: SonarCloud
         if: ${{ inputs.run-sonar && github.actor != 'dependabot[bot]' }}
         needs: [test, reports]
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 15
         permissions:
             contents: read
             pull-requests: read
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
               with:
                   fetch-depth: 0
 
             # Downloads test-results-<latest> (coverage + junit), ruff-report,
             # mypy-report, then runs the scan. Needs the project + SONAR_TOKEN.
             - name: SonarCloud scan
-              uses: chrysa/github-actions/sonar-scan-python@v1.2.3
+              uses: chrysa/github-actions/sonar-scan-python@v1.1.3
               with:
                   python-version: ${{ inputs.latest-python }}
                   sonar-token: ${{ secrets.SONAR_TOKEN }}

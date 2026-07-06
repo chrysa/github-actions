@@ -3,11 +3,6 @@ name: PR Dependency Check
 
 on:
     workflow_call:
-        inputs:
-            runner:
-                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
-                type: string
-                default: chrysa-arc
     pull_request_target:
         types: [closed, edited, opened, reopened]
 
@@ -15,18 +10,14 @@ permissions:
     issues: write
     pull-requests: write
 
-concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
-
 jobs:
     check_dependencies:
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         name: Check PR dependencies
 
         steps:
             - name: Check dependencies
-              uses: gregsdennis/dependencies-action@v1.4.2
+              uses: gregsdennis/dependencies-action@main
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

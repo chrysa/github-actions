@@ -12,30 +12,22 @@ on:
                 type: string
                 required: false
                 default: "dev"
-            runner:
-                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
-                type: string
-                default: chrysa-arc
 
 permissions:
     contents: read
 
-concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
-
 jobs:
     lint:
         name: Ruff + Mypy (pre-commit)
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 15
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
 
             # tool-setup = python-setup + install-project[extras]; ensures mypy
             # (language: system) and its stubs/deps are available for the replay.
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.2.3
+              uses: chrysa/github-actions/tool-setup@v1.1.3
               with:
                   python-version: ${{ inputs.python-version }}
                   extras: ${{ inputs.extras }}

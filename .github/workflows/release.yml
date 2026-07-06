@@ -3,38 +3,29 @@ name: Release
 
 on:
     workflow_call:
-        inputs:
-            runner:
-                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
-                type: string
-                default: chrysa-arc
 
 permissions:
     contents: write
     pull-requests: read
 
-concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: false
-
 jobs:
     release:
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         name: Create release
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
               with:
                   fetch-depth: 0
                   token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
             - name: Setup GitVersion
-              uses: gittools/actions/gitversion/setup@v4.5.0
+              uses: gittools/actions/gitversion/setup@v4
               with:
                   versionSpec: 6.x
 
             - name: Determine version
               id: gitversion
-              uses: gittools/actions/gitversion/execute@v4.5.0
+              uses: gittools/actions/gitversion/execute@v4
 
             - name: Install git-cliff
               uses: taiki-e/install-action@git-cliff
@@ -42,7 +33,7 @@ jobs:
             - name: Generate changelog
               id: changelog
               run: |
-                  CURRENT_TAG="v${{ steps.gitversion.outputs.majorMinorPatch }}"
+                  CURRENT_TAG="v${{ steps.gitversion.outputs.semVer }}"
                   git cliff --output CHANGELOG_RELEASE.md --tag "$CURRENT_TAG" 2>/dev/null || \
                     git cliff --unreleased --output CHANGELOG_RELEASE.md
                   echo "version=$CURRENT_TAG" >> "$GITHUB_OUTPUT"

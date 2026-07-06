@@ -103,10 +103,6 @@ on:
                 type: string
                 required: false
                 default: ''
-            runner:
-                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
-                type: string
-                default: chrysa-arc
         secrets:
             release-token:
                 description: PAT with write access to the catalog repo (gitops only)
@@ -123,24 +119,24 @@ concurrency:
 jobs:
     build-backend:
         name: Build & push backend
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 30
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
             - name: Log in to GHCR
               uses: docker/login-action@v4.2.0
               with:
                   registry: ghcr.io
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
-            - uses: docker/setup-buildx-action@v4.1.0
+            - uses: docker/setup-buildx-action@v4
             - name: Resolve version
               id: version
               run: echo "value=${{ github.event.release.tag_name || inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
               shell: bash
             - name: Metadata
               id: meta
-              uses: docker/metadata-action@v6.1.0
+              uses: docker/metadata-action@v6
               with:
                   images: ${{ inputs.image-base }}
                   tags: |
@@ -163,24 +159,24 @@ jobs:
     build-frontend:
         name: Build & push frontend
         if: ${{ inputs.build-frontend }}
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 30
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
             - name: Log in to GHCR
               uses: docker/login-action@v4.2.0
               with:
                   registry: ghcr.io
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
-            - uses: docker/setup-buildx-action@v4.1.0
+            - uses: docker/setup-buildx-action@v4
             - name: Resolve version
               id: version
               run: echo "value=${{ github.event.release.tag_name || inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
               shell: bash
             - name: Metadata
               id: meta
-              uses: docker/metadata-action@v6.1.0
+              uses: docker/metadata-action@v6
               with:
                   images: ${{ inputs.frontend-image }}
                   tags: |
@@ -204,7 +200,7 @@ jobs:
         name: GitOps — bump catalog image tags
         if: ${{ inputs.gitops && always() }}
         needs: [build-backend, build-frontend]
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
             - name: Guard — backend must have succeeded
@@ -216,7 +212,7 @@ jobs:
               run: echo "value=${{ github.event.release.tag_name || inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
               shell: bash
             - name: Checkout catalog
-              uses: actions/checkout@v7.0.0
+              uses: actions/checkout@v6.0.3
               with:
                   repository: ${{ inputs.catalog-repo }}
                   token: ${{ secrets.release-token }}
