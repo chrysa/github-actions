@@ -57,10 +57,6 @@ on:
                 type: boolean
                 required: false
                 default: true
-            runner:
-                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
-                type: string
-                default: chrysa-arc
         secrets:
             SONAR_TOKEN:
                 required: false
@@ -74,25 +70,20 @@ concurrency:
 jobs:
     gate:
         name: Pre-commit (lint/format/type/secrets, both stacks)
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 20
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.0
-            - uses: actions/setup-python@v6.3.0
+            - uses: actions/checkout@v6.0.3
+            - uses: actions/setup-python@v6
               with:
                   python-version: ${{ inputs.python-version }}
-            - uses: actions/setup-node@v6
+            - uses: actions/setup-node@v4
               with:
                   node-version: ${{ inputs.node-version }}
             - name: Install toolchain
               run: make install
-              shell: bash
-            # `make pre-commit` calls the `pre-commit` binary, which the repos'
-            # `make install` does not provide. Install it here so the gate runs.
-            - name: Ensure pre-commit is available
-              run: python -m pip install --quiet pre-commit
               shell: bash
             - name: Pre-commit gate
               run: SKIP=no-commit-to-branch make pre-commit
@@ -100,31 +91,29 @@ jobs:
 
     test:
         name: Tests (make ${{ inputs.test-target }})
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 30
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.0
-            - uses: actions/setup-python@v6.3.0
+            - uses: actions/checkout@v6.0.3
+            - uses: actions/setup-python@v6
               with:
                   python-version: ${{ inputs.python-version }}
-            - uses: actions/setup-node@v6
+            - uses: actions/setup-node@v4
               with:
                   node-version: ${{ inputs.node-version }}
             - name: Run test suite
-              env:
-                  TEST_TARGET: ${{ inputs.test-target }}
-              run: make "$TEST_TARGET"
+              run: make ${{ inputs.test-target }}
               shell: bash
             - name: Collect coverage reports
               if: always()
               run: |
                   mkdir -p reports
                   pyc=$(find . -maxdepth 4 -name coverage.xml -not -path './reports/*' | head -1)
-                  if [ -n "$pyc" ]; then cp "$pyc" reports/coverage.xml || true; fi
+                  [ -n "$pyc" ] && cp "$pyc" reports/coverage.xml || true
                   lcov=$(find . -maxdepth 5 -name lcov.info -not -path '*/node_modules/*' | head -1)
-                  if [ -n "$lcov" ]; then cp "$lcov" reports/lcov.info || true; fi
+                  [ -n "$lcov" ] && cp "$lcov" reports/lcov.info || true
                   ls -lh reports/ || true
               shell: bash
             - name: Upload coverage
@@ -139,17 +128,17 @@ jobs:
         name: SonarCloud
         if: ${{ inputs.run-sonar && github.actor != 'dependabot[bot]' }}
         needs: [test, gate]
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         timeout-minutes: 15
         permissions:
             contents: read
             pull-requests: read
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v6.0.3
               with:
                   fetch-depth: 0
             - name: SonarCloud scan
-              uses: chrysa/github-actions/sonar-scan-python@v1.2.3
+              uses: chrysa/github-actions/sonar-scan-python@v1.1.3
               with:
                   python-version: ${{ inputs.python-version }}
                   sonar-token: ${{ secrets.SONAR_TOKEN }}

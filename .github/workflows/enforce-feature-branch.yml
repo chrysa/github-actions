@@ -3,23 +3,14 @@ name: Enforce Feature Branch Policy
 
 on:
     workflow_call:
-        inputs:
-            runner:
-                description: "runs-on label (chrysa-arc self-hosted, or ubuntu-latest for public repos)"
-                type: string
-                default: chrysa-arc
 
 permissions:
     contents: read
 
-concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
-
 jobs:
     branch-policy:
         if: github.actor != 'dependabot[bot]'
-        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        runs-on: ubuntu-latest
         steps:
             - name: Validate PR source branch naming
               shell: bash
