@@ -104,16 +104,6 @@ jobs:
                   fi
               shell: bash
 
-            - name: Generate CHANGELOG.md
-              if: steps.tag_check.outputs.exists == 'false'
-              uses: orhun/git-cliff-action@v4
-              with:
-                  config: cliff.toml
-                  args: --tag v${{ steps.gitversion.outputs.majorMinorPatch }}
-              env:
-                  OUTPUT: CHANGELOG.md
-                  GITHUB_REPO: ${{ github.repository }}
-
             - name: Generate release notes
               if: steps.tag_check.outputs.exists == 'false'
               uses: orhun/git-cliff-action@v4
@@ -124,19 +114,23 @@ jobs:
                   OUTPUT: release_notes.md
                   GITHUB_REPO: ${{ github.repository }}
 
-            - name: Commit, tag and push
+            - name: Tag release on mainline
               if: steps.tag_check.outputs.exists == 'false'
               run: |
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
                   VERSION="v${{ steps.gitversion.outputs.majorMinorPatch }}"
                   MAJOR="v${{ steps.gitversion.outputs.major }}"
-                  git add CHANGELOG.md
-                  git diff --staged --quiet || git commit -m "chore: update CHANGELOG.md for $VERSION [skip ci]"
+                  # Tag the pushed commit (already on main) and push ONLY the tags — never a
+                  # commit to the protected main branch. The old flow created a CHANGELOG
+                  # commit and did `git push HEAD:main --follow-tags`; the push to protected
+                  # main was rejected but the tag still landed on that off-mainline commit,
+                  # wedging GitVersion at the next bump. The changelog is regenerated on
+                  # demand (make changelog) and captured in the GitHub Release notes below.
                   git tag -a "$VERSION" -m "Release $VERSION"
-                  git push origin HEAD:main --follow-tags
+                  git push origin "refs/tags/$VERSION"
                   git tag -fa "$MAJOR" -m "Latest v${{ steps.gitversion.outputs.major }}"
-                  git push origin "$MAJOR" --force
+                  git push origin "refs/tags/$MAJOR" --force
               shell: bash
 
             - name: Create GitHub Release
