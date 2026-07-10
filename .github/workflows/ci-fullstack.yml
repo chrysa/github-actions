@@ -75,11 +75,11 @@ jobs:
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v6.0.3
+            - uses: actions/checkout@v7.0.0
             - uses: actions/setup-python@v6
               with:
                   python-version: ${{ inputs.python-version }}
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ inputs.node-version }}
             - name: Install toolchain
@@ -96,11 +96,11 @@ jobs:
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v6.0.3
+            - uses: actions/checkout@v7.0.0
             - uses: actions/setup-python@v6
               with:
                   python-version: ${{ inputs.python-version }}
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ inputs.node-version }}
             - name: Run test suite
@@ -134,7 +134,7 @@ jobs:
             contents: read
             pull-requests: read
         steps:
-            - uses: actions/checkout@v6.0.3
+            - uses: actions/checkout@v7.0.0
               with:
                   fetch-depth: 0
             - name: SonarCloud scan
