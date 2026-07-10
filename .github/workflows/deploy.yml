@@ -124,7 +124,7 @@ jobs:
         steps:
             - uses: actions/checkout@v6.0.3
             - name: Log in to GHCR
-              uses: docker/login-action@v4.2.0
+              uses: docker/login-action@v4.4.0
               with:
                   registry: ghcr.io
                   username: ${{ github.actor }}
@@ -144,7 +144,7 @@ jobs:
                       type=raw,value=${{ steps.version.outputs.value }}
                       type=sha,prefix=sha-
             - name: Build and push
-              uses: docker/build-push-action@v7.2.0
+              uses: docker/build-push-action@v7.3.0
               with:
                   context: ${{ inputs.backend-context }}
                   file: ${{ inputs.backend-dockerfile }}
@@ -164,7 +164,7 @@ jobs:
         steps:
             - uses: actions/checkout@v6.0.3
             - name: Log in to GHCR
-              uses: docker/login-action@v4.2.0
+              uses: docker/login-action@v4.4.0
               with:
                   registry: ghcr.io
                   username: ${{ github.actor }}
@@ -184,7 +184,7 @@ jobs:
                       type=raw,value=${{ steps.version.outputs.value }}
                       type=sha,prefix=sha-
             - name: Build and push
-              uses: docker/build-push-action@v7.2.0
+              uses: docker/build-push-action@v7.3.0
               with:
                   context: ${{ inputs.frontend-context }}
                   file: ${{ inputs.frontend-dockerfile }}
