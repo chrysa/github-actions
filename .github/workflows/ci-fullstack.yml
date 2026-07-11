@@ -111,9 +111,9 @@ jobs:
               run: |
                   mkdir -p reports
                   pyc=$(find . -maxdepth 4 -name coverage.xml -not -path './reports/*' | head -1)
-                  [ -n "$pyc" ] && cp "$pyc" reports/coverage.xml || true
+                  if [ -n "$pyc" ]; then cp "$pyc" reports/coverage.xml || true; fi
                   lcov=$(find . -maxdepth 5 -name lcov.info -not -path '*/node_modules/*' | head -1)
-                  [ -n "$lcov" ] && cp "$lcov" reports/lcov.info || true
+                  if [ -n "$lcov" ]; then cp "$lcov" reports/lcov.info || true; fi
                   ls -lh reports/ || true
               shell: bash
             - name: Upload coverage
