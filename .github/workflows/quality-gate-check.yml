@@ -9,6 +9,10 @@ permissions:
   contents: read
   statuses: write
 
+concurrency:
+  group: quality-gate-check-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality-gate:
     name: No-Regression Quality Gates
