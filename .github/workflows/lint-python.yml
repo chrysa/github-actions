@@ -16,6 +16,10 @@ on:
 permissions:
     contents: read
 
+concurrency:
+  group: lint-python-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
     lint:
         name: Ruff + Mypy (pre-commit)
