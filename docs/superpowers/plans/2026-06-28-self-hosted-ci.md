@@ -322,13 +322,22 @@ git commit -m "ci: adopt v1.3.0 reusable workflows (self-hosted runners)"
 - Consumes: the `v1.3.0` workflows.
 - Produces: `v1.3.1` with reduced redundant runs.
 
-- [ ] **Step 1: Add concurrency cancel** to every PR-triggered reusable workflow:
+- [x] **Step 1: Add concurrency cancel** to the PR-triggered CI workflows (done 2026-07-11,
+  independent of the ARC rollout — helps billable-minute load now):
 
 ```yaml
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: <workflow>-${{ github.ref }}   # hardcoded per-file prefix, NOT github.workflow
   cancel-in-progress: true
 ```
+
+Note: the plan's original `${{ github.workflow }}` prefix is wrong for *reusable*
+(`workflow_call`) workflows — there it resolves to the *caller*, so two reusables
+invoked by one caller would share a group and cancel each other. Each file uses a
+hardcoded unique prefix instead. Applied to `ci`, `lint-python`, `pre-commit`,
+`quality-gate-check`, `secret-scan`, `mutation-testing` (cancel-in-progress: true);
+`release` gets `cancel-in-progress: false` (serialise, never cancel a running
+release). `actionlint` clean. Tagging/distribution stays with the ARC rollout.
 
 - [ ] **Step 2: Add path filters** to the language CI workflows (Python CI ignores frontend/docs-only diffs; Node CI ignores backend-only diffs) via `on.pull_request.paths` in the *caller* templates in `shared-standards/workflows`.
 
