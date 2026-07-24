@@ -27,7 +27,7 @@ jobs:
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v7.0.1
 
             - uses: chrysa/github-actions/python-setup@v1.3.0
               with:
@@ -44,7 +44,7 @@ jobs:
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v7.0.1
 
             - name: Check all action.yml files are valid YAML
               run: |
@@ -76,7 +76,7 @@ jobs:
         permissions:
             contents: write
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v7.0.1
               with:
                   fetch-depth: 0
 
