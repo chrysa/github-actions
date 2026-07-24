@@ -102,7 +102,7 @@ jobs:
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v7.0.1
 
             - name: Setup environment
               uses: chrysa/github-actions/tool-setup@v1.3.0
@@ -125,7 +125,7 @@ jobs:
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v7.0.1
 
             - name: Setup environment
               uses: chrysa/github-actions/tool-setup@v1.3.0
@@ -167,7 +167,7 @@ jobs:
             matrix:
                 python-version: ${{ fromJSON(inputs.python-versions) }}
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v7.0.1
 
             - name: Setup environment
               uses: chrysa/github-actions/tool-setup@v1.3.0
@@ -194,7 +194,7 @@ jobs:
             contents: read
             pull-requests: read
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@v7.0.1
               with:
                   fetch-depth: 0
 
