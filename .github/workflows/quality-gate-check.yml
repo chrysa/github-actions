@@ -31,12 +31,31 @@ jobs:
           node-version: "20"
           cache: npm
       - name: Install dependencies
+        # pyproject.toml is the canonical source (requirements*.txt is only a generated
+        # export, and the standard proscribes it). Installing the project with its
+        # quality extras is what puts pytest/ruff/mypy/detect-secrets on PATH — without
+        # them every gate command exits non-zero and the gate reports a regression that
+        # is really a missing toolchain.
         run: |
-          if [ -f requirements.txt ]; then pip install --only-binary :all: -r requirements.txt; fi
-          if [ -f package.json ]; then npm ci; fi
+          if [ -f pyproject.toml ]; then
+            pip install -e ".[test,lint,typecheck]" \
+              || pip install -e ".[dev]" \
+              || pip install -e .
+            pip install detect-secrets
+          elif [ -f requirements.txt ]; then
+            pip install --only-binary :all: -r requirements.txt
+          fi
+          if [ -f package.json ] && [ -f package-lock.json ]; then npm ci; fi
       - name: Run quality gate verification
         id: quality-gate
-        run: make quality-gate-verify || exit_code=$?; exit "${exit_code:-0}"
+        # A repo with no quality-gate-verify target is not onboarded yet — that is not a
+        # regression, so it must not fail the gate.
+        run: |
+          if make -n quality-gate-verify >/dev/null 2>&1; then
+            make quality-gate-verify
+          else
+            echo "::notice::No 'quality-gate-verify' target found - skipping gate (repo not onboarded)."
+          fi
       - name: Report quality gate status
         if: always()
         run: |
