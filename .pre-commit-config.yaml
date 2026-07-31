@@ -60,6 +60,18 @@ repos:
     exclude: ^tests?/
   - id: python-mutable-default
   - id: python-dispatch-ladder
+  - id: debugger-detection
+    exclude: ^(tests?/|README\.md|docs/)
+  - id: python-print-detection
+    exclude: ^(tests?/|README\.md|docs/)
+  - id: python-pprint-detection
+    exclude: ^(tests?/|README\.md|docs/)
+  - id: no-bare-except
+  - id: python-logger-detection
+    exclude: ^(tests?/|README\.md|docs/)
+  - id: python-unreachable-code
+  - id: no-hardcoded-localhost
+    exclude: tests?/|\.test\.|\.spec\.
 - repo: https://github.com/compilerla/conventional-pre-commit
   rev: v4.4.0
   hooks:
@@ -85,6 +97,4 @@ repos:
   rev: v1.30.10
   hooks:
   - id: guideline-check
-    # .claude/ hook scripts communicate over stdout — print() is their output
-    # protocol, not production logging debt. Exclude them from the print()/logging rule.
     exclude: ^\.claude/
