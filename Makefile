@@ -45,13 +45,15 @@ install: ## Install required tools (actionlint, pre-commit)
 dev: ## No-op for composite actions repo
 	@echo "No dev server for composite actions — use validate to check actions"
 
-test: validate ## Run action validation (alias → validate)
+test: validate ## Validate actions (actionlint) + run the Python test suite
+	@pytest
 
 docker-test: ## Validate GitHub Actions in Docker (CI-compatible)
 	docker run --rm -v $(PWD):/work -w /work golang:1.25-alpine sh -c \
 		"go install github.com/rhysd/actionlint/cmd/actionlint@latest && actionlint"
 
-test-cov: validate ## Run action validation (no coverage for actions repo)
+test-cov: validate ## Run the Python test suite with coverage
+	@pytest --cov=notion_sync --cov-report=term-missing
 
 lint: validate ## Lint composite actions (alias → validate)
 

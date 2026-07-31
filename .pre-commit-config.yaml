@@ -85,3 +85,6 @@ repos:
   rev: v1.30.10
   hooks:
   - id: guideline-check
+    # .claude/ hook scripts communicate over stdout — print() is their output
+    # protocol, not production logging debt. Exclude them from the print()/logging rule.
+    exclude: ^\.claude/
