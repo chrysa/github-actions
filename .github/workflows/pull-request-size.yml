@@ -1,4 +1,6 @@
-"on": pull_request_target
+"on":
+  pull_request_target: null
+  workflow_call: null
 jobs:
   size-label:
     runs-on: ubuntu-latest

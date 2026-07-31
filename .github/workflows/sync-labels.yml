@@ -9,6 +9,7 @@
   schedule:
   - cron: 0 2 * * 1
   workflow_dispatch: null
+  workflow_call: null
 jobs:
   sync-labels:
     name: Synchronize labels
