@@ -1,0 +1,24 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=77"]
+
+[project]
+description = "Composite GitHub Actions and their tested Python entrypoints for the chrysa fleet"
+name = "chrysa-github-actions"
+requires-python = ">=3.12"
+version = "0.0.0"
+
+[tool.setuptools]
+packages = ["notion_sync"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["B", "C90", "E", "F", "I", "PERF", "PL", "RUF", "SIM", "UP"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
+testpaths = ["tests"]

@@ -22,6 +22,8 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/sonar-scan-node@main` | SonarCloud scan (Node.js / TypeScript) |
 | `chrysa/github-actions/sonar-js-scan@main` | SonarCloud scan (JS / Google Apps Script) |
 | `chrysa/github-actions/publish-python-package@main` | Build + publish Python package to PyPI |
+| `chrysa/github-actions/notion-branch-sync@main` | Sync the pushed branch to the Notion Branch Activity database |
+| `chrysa/github-actions/notion-roadmap-sync@main` | Sync an issue/PR event to the Notion roadmap row |
 
 ## Usage
 
@@ -248,3 +250,35 @@ Build and publish a Python package to PyPI.
     build-backend: 'hatch'
     repository-url: 'https://test.pypi.org/legacy/'
 ```
+
+### notion-branch-sync
+
+Sync the pushed branch (commit, PR count, CI status, changelog excerpt) to the shared
+Notion "Branch Activity" database. Requires a full-history checkout for the changelog.
+
+```yaml
+- uses: actions/checkout@v7.0.1
+  with:
+    fetch-depth: 0
+- uses: chrysa/github-actions/notion-branch-sync@main
+  with:
+    notion-token: ${{ secrets.NOTION_TOKEN }}
+    branches-db-id: ${{ vars.NOTION_BRANCHES_DB_ID }}
+    project-block-id: ${{ vars.NOTION_PROJECT_BLOCK_ID }}  # optional, main/master changelog sync
+```
+
+### notion-roadmap-sync
+
+Sync an issue or pull-request event to the project's Notion roadmap table row.
+
+```yaml
+- uses: chrysa/github-actions/notion-roadmap-sync@main
+  with:
+    notion-token: ${{ secrets.NOTION_TOKEN }}
+    block-id: ${{ vars.NOTION_PROJECT_BLOCK_ID }}
+```
+
+## Python entrypoints
+
+Action logic that outgrows a one-line `run:` lives in `notion_sync/` and is unit-tested
+(`tests/`, run by `make test`) — workflows stay glue, per the fleet GitHub Actions standard.

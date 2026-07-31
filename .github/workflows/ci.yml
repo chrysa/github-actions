@@ -38,34 +38,23 @@ jobs:
                   SKIP: no-commit-to-branch
 
     validate:
-        name: Validate actions YAML
+        name: Tests + action YAML validation
         runs-on: ubuntu-latest
-        timeout-minutes: 5
+        timeout-minutes: 10
         permissions:
             contents: read
         steps:
             - uses: actions/checkout@v7.0.1
 
-            - name: Check all action.yml files are valid YAML
-              run: |
-                  python3 -c "
-                  import yaml, pathlib, sys
-                  errors = []
-                  for f in sorted(pathlib.Path('.').glob('*/action.yml')):
-                      try:
-                          data = yaml.safe_load(f.read_text())
-                          has_runs = 'runs' in (data or {})
-                          name = (data or {}).get('name', 'MISSING')
-                          status = 'OK' if has_runs else 'ERR'
-                          print(f'{status}  {f}  name={name!r}')
-                          if not has_runs:
-                              errors.append(str(f))
-                      except yaml.YAMLError as e:
-                          print(f'ERR  {f}: {e}')
-                          errors.append(str(f))
-                  sys.exit(len(errors))
-                  "
-              shell: bash
+            - uses: chrysa/github-actions/python-setup@v1.4.4
+              with:
+                  python-version: "3.14"
+
+            - name: Install test dependencies
+              run: pip install --quiet pytest pyyaml
+
+            - name: Run test suite
+              run: pytest
 
     release:
         name: Tag release
