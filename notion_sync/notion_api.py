@@ -6,7 +6,6 @@ import json
 import os
 import urllib.error
 import urllib.request
-from typing import Any
 
 NOTION_API_ROOT = "https://api.notion.com/v1/"
 GITHUB_API_ROOT = "https://api.github.com/"
@@ -29,7 +28,7 @@ class NotionSyncError(RuntimeError):
     """A Notion or GitHub call failed in a way the caller must handle."""
 
 
-def rich_text(content: object) -> list[dict[str, Any]]:
+def rich_text(content: object) -> list[dict[str, object]]:
     """Build a Notion `rich_text` payload from any printable value."""
     text = str(content)[:RICH_TEXT_MAX_CHARS]
     return [
@@ -42,7 +41,7 @@ def rich_text(content: object) -> list[dict[str, Any]]:
     ]
 
 
-def _request(url: str, headers: dict[str, str], method: str, body: object | None) -> Any | None:
+def _request(url: str, headers: dict[str, str], method: str, body: object | None) -> object | None:
     data = json.dumps(body).encode() if body is not None else None
     request = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
@@ -55,7 +54,7 @@ def _request(url: str, headers: dict[str, str], method: str, body: object | None
     return None
 
 
-def notion_request(method: str, path: str, body: object | None = None) -> Any | None:
+def notion_request(method: str, path: str, body: object | None = None) -> object | None:
     """Call the Notion API. Returns the decoded body, or None when the call failed."""
     token = os.environ.get("NOTION_TOKEN", "")
     if not token:
@@ -68,7 +67,7 @@ def notion_request(method: str, path: str, body: object | None = None) -> Any | 
     return _request(NOTION_API_ROOT + path.lstrip("/"), headers, method, body)
 
 
-def github_request(path: str) -> Any | None:
+def github_request(path: str) -> object | None:
     """Read the GitHub API with the workflow token. Returns None when the call failed."""
     headers = {
         "Authorization": f"Bearer {os.environ.get('GITHUB_TOKEN', '')}",
@@ -78,8 +77,10 @@ def github_request(path: str) -> Any | None:
     return _request(GITHUB_API_ROOT + path.lstrip("/"), headers, "GET", None)
 
 
-def table_row_cells(block: dict[str, Any]) -> list[Any]:
+def table_row_cells(block: object) -> list[object]:
     """Extract the cells of a Notion table-row block."""
-    row_type = block.get("type", "table_row")
-    cells = block.get(row_type, {}).get("cells", [])
+    if not isinstance(block, dict):
+        return []
+    row = block.get(block.get("type", "table_row"), {})
+    cells = row.get("cells", []) if isinstance(row, dict) else []
     return list(cells) if isinstance(cells, list) else []

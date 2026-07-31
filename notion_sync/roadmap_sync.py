@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import datetime
 import os
-from typing import Any
 
 from notion_sync.notion_api import notion_request, rich_text, table_row_cells
 
@@ -28,7 +27,7 @@ def build_task_label(env: dict[str, str]) -> str:
     return f"{event} [{action}]"
 
 
-def updated_cells(cells: list[Any], task: str, today: str) -> list[Any]:
+def updated_cells(cells: list[object], task: str, today: str) -> list[object]:
     """Return the row cells with the current-task and last-update columns refreshed."""
     updated = list(cells)
     if len(updated) > CELL_CURRENT_TASK:
