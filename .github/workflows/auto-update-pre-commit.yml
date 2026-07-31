@@ -2,6 +2,7 @@
   schedule:
   - cron: 0 5 * * 1
   workflow_dispatch: null
+  workflow_call: null
 jobs:
   pre-commit-autoupdate:
     name: Bump pre-commit hooks
