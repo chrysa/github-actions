@@ -60,7 +60,7 @@ def read_changelog_excerpt(path: str = CHANGELOG_PATH) -> str:
         return changelog_excerpt(handle.read())
 
 
-def ci_status(runs: Any) -> str:
+def ci_status(runs: dict[str, Any] | None) -> str:
     """Map the latest workflow run conclusion to the Notion CI status value."""
     workflow_runs = (runs or {}).get("workflow_runs") if isinstance(runs, dict) else None
     if not workflow_runs:
