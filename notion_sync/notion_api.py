@@ -7,6 +7,10 @@ import os
 import urllib.error
 import urllib.request
 
+from notion_sync.logging_setup import get_logger
+
+logger = get_logger(__name__)
+
 NOTION_API_ROOT = "https://api.notion.com/v1/"
 GITHUB_API_ROOT = "https://api.github.com/"
 NOTION_VERSION = "2022-06-28"
@@ -48,9 +52,9 @@ def _request(url: str, headers: dict[str, str], method: str, body: object | None
         with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
             return json.loads(response.read())
     except urllib.error.HTTPError as error:
-        print(f"::warning::{method} {url} failed ({error.code}): {error.read().decode()[:500]}")
+        logger.info(f"::warning::{method} {url} failed ({error.code}): {error.read().decode()[:500]}")
     except (urllib.error.URLError, TimeoutError, ValueError) as error:
-        print(f"::warning::{method} {url} failed: {error}")
+        logger.info(f"::warning::{method} {url} failed: {error}")
     return None
 
 

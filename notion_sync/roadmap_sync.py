@@ -5,11 +5,15 @@ from __future__ import annotations
 import datetime
 import os
 
+from notion_sync.logging_setup import configure, get_logger
 from notion_sync.notion_api import notion_request, rich_text, table_row_cells
 
 TASK_TITLE_MAX_CHARS = 55
 CELL_CURRENT_TASK = 4
 CELL_LAST_UPDATE = 7
+
+
+logger = get_logger(__name__)
 
 
 def build_task_label(env: dict[str, str]) -> str:
@@ -38,20 +42,21 @@ def updated_cells(cells: list[object], task: str, today: str) -> list[object]:
 
 
 def main() -> int:
+    configure()
     block_id = os.environ.get("NOTION_BLOCK_ID", "").strip()
     if not block_id or not os.environ.get("NOTION_TOKEN", ""):
-        print("Missing NOTION_TOKEN or NOTION_BLOCK_ID — skipping")
+        logger.info("Missing NOTION_TOKEN or NOTION_BLOCK_ID — skipping")
         return 0
 
     block = notion_request("GET", f"blocks/{block_id}")
     if not block:
-        print("::warning::roadmap row unreadable — skipping")
+        logger.info("::warning::roadmap row unreadable — skipping")
         return 0
 
     task = build_task_label(dict(os.environ))
     cells = updated_cells(table_row_cells(block), task, datetime.date.today().isoformat())
     notion_request("PATCH", f"blocks/{block_id}", {"table_row": {"cells": cells}})
-    print(f"Notion roadmap row {block_id[:8]} → {task}")
+    logger.info(f"Notion roadmap row {block_id[:8]} → {task}")
     return 0
 
 
