@@ -4,6 +4,7 @@
     - opened
     - ready_for_review
     - reopened
+  workflow_call: null
 jobs:
   add-reviews:
     runs-on: ubuntu-latest
