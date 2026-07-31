@@ -6,8 +6,8 @@ import datetime
 import os
 import re
 import urllib.parse
-from typing import Any
 
+from notion_sync.logging_setup import configure, get_logger
 from notion_sync.notion_api import (
     NotionSyncError,
     github_request,
@@ -31,6 +31,9 @@ CI_CONCLUSION_TO_STATUS = {
     "failure": "failing",
     "timed_out": "failing",
 }
+
+
+logger = get_logger(__name__)
 
 
 def normalise_date(timestamp: str) -> str:
@@ -60,18 +63,19 @@ def read_changelog_excerpt(path: str = CHANGELOG_PATH) -> str:
         return changelog_excerpt(handle.read())
 
 
-def ci_status(runs: dict[str, Any] | None) -> str:
+def ci_status(runs: object) -> str:
     """Map the latest workflow run conclusion to the Notion CI status value."""
-    workflow_runs = (runs or {}).get("workflow_runs") if isinstance(runs, dict) else None
-    if not workflow_runs:
+    workflow_runs = runs.get("workflow_runs") if isinstance(runs, dict) else None
+    if not isinstance(workflow_runs, list) or not workflow_runs:
         return "unknown"
-    conclusion = workflow_runs[0].get("conclusion") or "unknown"
+    latest = workflow_runs[0]
+    conclusion = (latest.get("conclusion") if isinstance(latest, dict) else None) or "unknown"
     return CI_CONCLUSION_TO_STATUS.get(conclusion, "unknown")
 
 
-def build_properties(context: dict[str, str], pr_count: int, status: str, excerpt: str) -> dict[str, Any]:
+def build_properties(context: dict[str, str], pr_count: int, status: str, excerpt: str) -> dict[str, object]:
     """Build the Notion page properties for one branch row."""
-    properties: dict[str, Any] = {
+    properties: dict[str, object] = {
         "Branch": {"title": rich_text(context["branch"])},
         "Repo": {"rich_text": rich_text(context["repo_short"])},
         "Status": {"select": {"name": "active"}},
@@ -112,8 +116,12 @@ def _find_existing_page(database_id: str, context: dict[str, str]) -> str | None
         }
     }
     result = notion_request("POST", f"databases/{database_id}/query", query)
-    results = (result or {}).get("results", [])
-    return results[0]["id"] if results else None
+    results = result.get("results") if isinstance(result, dict) else None
+    if not isinstance(results, list) or not results:
+        return None
+    first = results[0]
+    page_id = first.get("id") if isinstance(first, dict) else None
+    return str(page_id) if page_id else None
 
 
 def _sync_roadmap_row(excerpt: str, branch: str) -> None:
@@ -129,13 +137,14 @@ def _sync_roadmap_row(excerpt: str, branch: str) -> None:
     if len(cells) > CELL_LAST_UPDATE:
         cells[CELL_LAST_UPDATE] = rich_text(datetime.date.today().isoformat())
     notion_request("PATCH", f"blocks/{block_id}", {"table_row": {"cells": cells}})
-    print(f"Roadmap row {block_id[:8]} changelog synced")
+    logger.info(f"Roadmap row {block_id[:8]} changelog synced")
 
 
 def main() -> int:
+    configure()
     database_id = os.environ.get("NOTION_BRANCHES_DB_ID", "").strip()
     if not database_id:
-        print("NOTION_BRANCHES_DB_ID not set — skipping")
+        logger.info("NOTION_BRANCHES_DB_ID not set — skipping")
         return 0
 
     context = read_context(dict(os.environ))
@@ -161,7 +170,7 @@ def main() -> int:
 
     if not response:
         raise NotionSyncError(f"could not sync {context['repo_short']}/{context['branch']} to Notion")
-    print(
+    logger.info(
         f"Notion branch entry {action}: {context['repo_short']}/{context['branch']} "
         f"(sha={context['sha']}, ci={status}, prs={pr_count})"
     )

@@ -63,9 +63,9 @@ repos:
   - id: debugger-detection
     exclude: ^(tests?/|README\.md|docs/)
   - id: python-print-detection
-    exclude: ^(tests?/|README\.md|docs/)
+    exclude: ^(tests?/|README\.md|docs/|\.claude/)
   - id: python-pprint-detection
-    exclude: ^(tests?/|README\.md|docs/)
+    exclude: ^(tests?/|README\.md|docs/|\.claude/)
   - id: no-bare-except
   - id: python-logger-detection
     exclude: ^(tests?/|README\.md|docs/)
