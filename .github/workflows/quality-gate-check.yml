@@ -37,9 +37,13 @@ jobs:
         # them every gate command exits non-zero and the gate reports a regression that
         # is really a missing toolchain.
         run: |
+          # `dev` first: it is the repo's own aggregate of every extra, so the whole
+          # suite collects. A narrower `[test,lint,typecheck]` can miss an extra a test
+          # module imports — collection then aborts and the coverage gate reports a
+          # regression that is really a partial run.
           if [ -f pyproject.toml ]; then
-            pip install -e ".[test,lint,typecheck]" \
-              || pip install -e ".[dev]" \
+            pip install -e ".[dev]" \
+              || pip install -e ".[test,lint,typecheck]" \
               || pip install -e .
             pip install detect-secrets
           elif [ -f requirements.txt ]; then
