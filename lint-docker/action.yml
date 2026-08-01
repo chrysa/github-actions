@@ -1,0 +1,25 @@
+description: Run hadolint over the repository's Dockerfiles
+inputs:
+  exclude-paths:
+    default: ./.git/* ./archive/*
+    description: Space-separated find(1) path patterns to skip
+    required: false
+  failure-threshold:
+    default: warning
+    description: hadolint failure threshold
+    required: false
+  hadolint-version:
+    default: v2.14.0
+    description: Pinned hadolint release
+    required: false
+name: Lint Dockerfile
+runs:
+  steps:
+  - env:
+      EXCLUDE_PATHS: ${{ inputs.exclude-paths }}
+      FAILURE_THRESHOLD: ${{ inputs.failure-threshold }}
+      HADOLINT_VERSION: ${{ inputs.hadolint-version }}
+    name: hadolint
+    run: bash "${GITHUB_ACTION_PATH}/../scripts/lint_docker.sh"
+    shell: bash
+  using: composite

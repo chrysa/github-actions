@@ -24,6 +24,11 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/publish-python-package@main` | Build + publish Python package to PyPI |
 | `chrysa/github-actions/notion-branch-sync@main` | Sync the pushed branch to the Notion Branch Activity database |
 | `chrysa/github-actions/notion-roadmap-sync@main` | Sync an issue/PR event to the Notion roadmap row |
+| `chrysa/github-actions/lint-yaml@main` | yamllint over the repo's YAML |
+| `chrysa/github-actions/lint-bash@main` | shellcheck + shfmt over shell scripts |
+| `chrysa/github-actions/lint-docker@main` | hadolint over Dockerfiles |
+| `chrysa/github-actions/lint-helm@main` | `helm lint --strict` per chart |
+| `chrysa/github-actions/validate-terraform@main` | terraform init/validate/fmt (never applies) |
 
 ## Usage
 
@@ -282,3 +287,28 @@ Sync an issue or pull-request event to the project's Notion roadmap table row.
 
 Action logic that outgrows a one-line `run:` lives in `notion_sync/` and is unit-tested
 (`tests/`, run by `make test`) — workflows stay glue, per the fleet GitHub Actions standard.
+
+### lint-yaml / lint-bash / lint-docker / lint-helm / validate-terraform
+
+Infrastructure linters extracted from `chrysa/server`, where they lived as repo-local
+composite actions. Every path/version is an input, so any repo can consume them.
+
+```yaml
+- uses: chrysa/github-actions/lint-yaml@main
+  with:
+    config-file: .yamllint.yaml
+    exclude-paths: "./.git/* ./archive/*"
+
+- uses: chrysa/github-actions/lint-bash@main       # severity, indent, exclude-paths
+- uses: chrysa/github-actions/lint-docker@main     # hadolint-version, failure-threshold
+- uses: chrysa/github-actions/lint-helm@main
+  with:
+    charts-root: apps
+    helm-repositories: |
+      bjw-s https://bjw-s-labs.github.io/helm-charts
+      traefik https://helm.traefik.io/traefik
+
+- uses: chrysa/github-actions/validate-terraform@main
+  with:
+    working-directory: terraform
+```
