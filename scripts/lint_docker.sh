@@ -3,7 +3,7 @@
 set -euo pipefail
 
 version="${HADOLINT_VERSION:-v2.14.0}"
-curl -fsSL "https://github.com/hadolint/hadolint/releases/download/${version}/hadolint-Linux-x86_64" \
+curl --proto "=https" --tlsv1.2 -fsSL "https://github.com/hadolint/hadolint/releases/download/${version}/hadolint-Linux-x86_64" \
     -o /usr/local/bin/hadolint
 chmod +x /usr/local/bin/hadolint
 
@@ -14,7 +14,7 @@ for pattern in "${excludes[@]}"; do
 done
 
 mapfile -t dockerfiles < <(find "${find_args[@]}")
-if [ ${#dockerfiles[@]} -eq 0 ]; then
+if [[ ${#dockerfiles[@]} -eq 0 ]]; then
     echo "No Dockerfiles found, skipping."
     exit 0
 fi

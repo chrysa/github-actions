@@ -11,7 +11,7 @@ for pattern in "${excludes[@]}"; do
 done
 
 mapfile -t files < <(find "${find_args[@]}")
-if [ ${#files[@]} -eq 0 ]; then
+if [[ ${#files[@]} -eq 0 ]]; then
     echo "No YAML files found, skipping."
     exit 0
 fi
