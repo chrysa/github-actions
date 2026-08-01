@@ -39,7 +39,7 @@ jobs:
             # Replay every pre-commit hook, including pre-push-staged ones (mypy).
             # Hooks without an explicit `stages:` (ruff, ruff-format) run at all
             # stages, so a single invocation covers the full lint surface.
-            - uses: pre-commit/action@v3.0.1
+            - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
               with:
                   extra_args: --all-files --hook-stage pre-push
               env:
