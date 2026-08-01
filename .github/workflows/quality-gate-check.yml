@@ -45,10 +45,22 @@ jobs:
             pip install -e ".[dev]" \
               || pip install -e ".[test,lint,typecheck]" \
               || pip install -e .
-            pip install detect-secrets
           elif [ -f requirements.txt ]; then
             pip install --only-binary :all: -r requirements.txt
           fi
+          # The gate shells out to these four on the host. A repo's extras may or may
+          # not carry them, and when one is absent the gate command exits 127 — which
+          # the gate reads as a regression that is really a missing toolchain.
+          # Install only what the project install did not already provide, so a repo
+          # that pins its own ruff/mypy keeps that version.
+          for tool in ruff mypy detect-secrets pip-audit; do
+            if command -v "$tool" >/dev/null 2>&1; then
+              echo "::debug::${tool} already on PATH ($(command -v "$tool"))"
+            else
+              echo "::notice::${tool} missing from the project install - adding it for the gate"
+              pip install "$tool"
+            fi
+          done
           if [ -f package.json ] && [ -f package-lock.json ]; then npm ci; fi
       - name: Run quality gate verification
         id: quality-gate
