@@ -1,0 +1,27 @@
+description: Run helm lint --strict on every chart found under the charts root
+inputs:
+  charts-root:
+    default: apps
+    description: Directory holding the charts (searched at depth 2)
+    required: false
+  helm-repositories:
+    default: ''
+    description: 'Newline-separated "name url" pairs added before linting'
+    required: false
+  helm-version:
+    default: latest
+    description: Helm version to install
+    required: false
+name: Lint Helm Charts
+runs:
+  steps:
+  - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4
+    with:
+      version: ${{ inputs.helm-version }}
+  - env:
+      CHARTS_ROOT: ${{ inputs.charts-root }}
+      HELM_REPOSITORIES: ${{ inputs.helm-repositories }}
+    name: helm lint
+    run: bash "${GITHUB_ACTION_PATH}/../scripts/lint_helm.sh"
+    shell: bash
+  using: composite

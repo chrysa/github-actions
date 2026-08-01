@@ -1,0 +1,28 @@
+description: Run shellcheck and shfmt over the repository's shell scripts
+inputs:
+  exclude-paths:
+    default: ./.git/* ./archive/*
+    description: Space-separated find(1) path patterns to skip
+    required: false
+  indent:
+    default: '4'
+    description: shfmt indentation width
+    required: false
+  severity:
+    default: error
+    description: shellcheck severity threshold
+    required: false
+name: Lint Bash
+runs:
+  steps:
+  - name: Install shellcheck + shfmt
+    run: sudo apt-get install -y shellcheck shfmt
+    shell: bash
+  - env:
+      EXCLUDE_PATHS: ${{ inputs.exclude-paths }}
+      SHELLCHECK_SEVERITY: ${{ inputs.severity }}
+      SHFMT_INDENT: ${{ inputs.indent }}
+    name: shellcheck + shfmt
+    run: bash "${GITHUB_ACTION_PATH}/../scripts/lint_bash.sh"
+    shell: bash
+  using: composite
