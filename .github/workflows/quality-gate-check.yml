@@ -24,12 +24,24 @@ jobs:
         uses: actions/setup-python@v7.0.0
         with:
           python-version: "3.14"
+      # `cache: npm` errors out ("Dependencies lock file is not found") on every repo
+      # without a JS lockfile — which is most of the fleet. The step survives on
+      # continue-on-error, but it prints a red ##[error] in the log of a passing gate,
+      # which is how a real failure gets missed. Cache only when there is a lockfile.
+      - name: Detect a JS lockfile
+        id: js
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; then
+            echo "cache=npm" >> "$GITHUB_OUTPUT"
+          else
+            echo "cache=" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Node.js (if needed)
         continue-on-error: true
         uses: actions/setup-node@v7.0.0
         with:
           node-version: "20"
-          cache: npm
+          cache: ${{ steps.js.outputs.cache }}
       - name: Install dependencies
         # pyproject.toml is the canonical source (requirements*.txt is only a generated
         # export, and the standard proscribes it). Installing the project with its
@@ -41,14 +53,31 @@ jobs:
           # suite collects. A narrower `[test,lint,typecheck]` can miss an extra a test
           # module imports — collection then aborts and the coverage gate reports a
           # regression that is really a partial run.
-          if [ -f pyproject.toml ]; then
+          # A pyproject.toml without a [project] table is TOOLING CONFIG, not a package
+          # (ruff/mypy/pytest settings for a repo of scripts). `pip install -e .` on such
+          # a tree fails on setuptools flat-layout auto-discovery ("Multiple top-level
+          # packages discovered"), and the gate reports a regression that is really "this
+          # repo was never installable". Only install when the project declares itself.
+          if [ -f pyproject.toml ] && grep -q '^\[project\]' pyproject.toml; then
             pip install -e ".[dev]" \
               || pip install -e ".[test,lint,typecheck]" \
               || pip install -e .
-            pip install detect-secrets
           elif [ -f requirements.txt ]; then
             pip install --only-binary :all: -r requirements.txt
           fi
+          # The gate shells out to these four on the host. A repo's extras may or may
+          # not carry them, and when one is absent the gate command exits 127 — which
+          # the gate reads as a regression that is really a missing toolchain.
+          # Install only what the project install did not already provide, so a repo
+          # that pins its own ruff/mypy keeps that version.
+          for tool in ruff mypy detect-secrets pip-audit; do
+            if command -v "$tool" >/dev/null 2>&1; then
+              echo "::debug::${tool} already on PATH ($(command -v "$tool"))"
+            else
+              echo "::notice::${tool} missing from the project install - adding it for the gate"
+              pip install "$tool"
+            fi
+          done
           if [ -f package.json ] && [ -f package-lock.json ]; then npm ci; fi
       - name: Run quality gate verification
         id: quality-gate
