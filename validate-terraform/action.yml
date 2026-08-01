@@ -1,0 +1,29 @@
+description: Run terraform init (no backend), validate and fmt check — never applies
+inputs:
+  terraform-version:
+    default: ~1.6
+    description: Terraform version constraint
+    required: false
+  working-directory:
+    default: terraform
+    description: Directory holding the Terraform configuration
+    required: false
+name: Validate Terraform
+runs:
+  steps:
+  - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+    with:
+      terraform_version: ${{ inputs.terraform-version }}
+  - name: terraform init (backend=false, no credentials needed)
+    run: terraform init -backend=false -input=false
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+  - name: terraform validate
+    run: terraform validate
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+  - name: terraform fmt check
+    run: terraform fmt -check -recursive
+    shell: bash
+    working-directory: ${{ inputs.working-directory }}
+  using: composite
