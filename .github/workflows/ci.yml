@@ -5,12 +5,14 @@ on:
     pull_request:
         branches:
             - main
+            - develop
     push:
         branches:
             - main
             - feature/**
             - fix/**
             - release/**
+            - develop
     workflow_dispatch:
 
 permissions: {}
