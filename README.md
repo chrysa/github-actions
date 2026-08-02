@@ -29,6 +29,7 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/lint-docker@main` | hadolint over Dockerfiles |
 | `chrysa/github-actions/lint-helm@main` | `helm lint --strict` per chart |
 | `chrysa/github-actions/validate-terraform@main` | terraform init/validate/fmt (never applies) |
+| `chrysa/github-actions/check-branch-policy@main` | Enforce the chrysa branch model on a PR |
 
 ## Usage
 
@@ -311,4 +312,14 @@ composite actions. Every path/version is an input, so any repo can consume them.
 - uses: chrysa/github-actions/validate-terraform@main
   with:
     working-directory: terraform
+```
+
+### check-branch-policy
+
+Enforce the branch model on a pull request: `develop -> main` is the release promotion,
+`hotfix/*` is the only other branch allowed to target `main`, everything else must match
+`type/short-description` and integrate through `develop`.
+
+```yaml
+- uses: chrysa/github-actions/check-branch-policy@main
 ```
