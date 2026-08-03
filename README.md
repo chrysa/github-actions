@@ -30,6 +30,7 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/lint-helm@main` | `helm lint --strict` per chart |
 | `chrysa/github-actions/validate-terraform@main` | terraform init/validate/fmt (never applies) |
 | `chrysa/github-actions/check-branch-policy@main` | Enforce the chrysa branch model on a PR |
+| `chrysa/github-actions/gist-publish@main` | Version, changelog and publish the multi-machine setup gist |
 
 ## Usage
 
@@ -322,4 +323,18 @@ Enforce the branch model on a pull request: `develop -> main` is the release pro
 
 ```yaml
 - uses: chrysa/github-actions/check-branch-policy@main
+```
+
+### gist-publish
+
+Bump `SETUP_VERSION`, write the changelog entry, tag, and push the multi-machine setup
+files to the private gist. Extracted from a 149-line workflow duplicated byte-identically
+in `chrysa-skills` and `claude-config`.
+
+```yaml
+- uses: chrysa/github-actions/gist-publish@main
+  with:
+    gist-token: ${{ secrets.GH_PAT_GIST }}
+    gist-id: ${{ secrets.CHRYSA_SETUP_GIST_ID }}
+    bump: ${{ github.event.inputs.bump }}
 ```
