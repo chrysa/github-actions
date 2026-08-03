@@ -31,14 +31,24 @@ runs:
     run: npm run build --if-present
     shell: bash
     working-directory: ${{ inputs.package-dir }}
-  - name: Publish to GitHub Packages
+  - name: Publish to GitHub Packages (idempotent)
     # publishConfig.registry in the package's package.json selects the GHCR npm
     # registry; setup-node writes the matching .npmrc with the auth token env var.
-    # A re-publish of an already-published version fails with 409 — the caller
-    # gates on a version bump (GitVersion), so a run only reaches here on a new one.
+    # Package versions are set by hand in package.json (decoupled from the repo's
+    # GitVersion tag), so a release re-run would otherwise 409 on an unchanged
+    # version. Skip when this name@version is already published — publish only the
+    # genuinely new ones, making the step safe to run on every release.
     env:
       NODE_AUTH_TOKEN: ${{ inputs.node-auth-token }}
-    run: npm publish
+    run: |
+      name=$(node -p "require('./package.json').name")
+      version=$(node -p "require('./package.json').version")
+      if npm view "${name}@${version}" version >/dev/null 2>&1; then
+        echo "${name}@${version} is already published — skipping."
+      else
+        echo "Publishing ${name}@${version}…"
+        npm publish
+      fi
     shell: bash
     working-directory: ${{ inputs.package-dir }}
   using: composite
