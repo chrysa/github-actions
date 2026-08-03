@@ -22,6 +22,7 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/sonar-scan-node@main` | SonarCloud scan (Node.js / TypeScript) |
 | `chrysa/github-actions/sonar-js-scan@main` | SonarCloud scan (JS / Google Apps Script) |
 | `chrysa/github-actions/publish-python-package@main` | Build + publish Python package to PyPI |
+| `chrysa/github-actions/publish-node-package@main` | Build + publish a scoped npm package to GitHub Packages (private GHCR npm) |
 | `chrysa/github-actions/notion-branch-sync@main` | Sync the pushed branch to the Notion Branch Activity database |
 | `chrysa/github-actions/notion-roadmap-sync@main` | Sync an issue/PR event to the Notion roadmap row |
 | `chrysa/github-actions/lint-yaml@main` | yamllint over the repo's YAML |
@@ -257,6 +258,29 @@ Build and publish a Python package to PyPI.
     build-backend: 'hatch'
     repository-url: 'https://test.pypi.org/legacy/'
 ```
+
+### publish-node-package
+
+Build and publish a scoped npm package to **GitHub Packages** (the private GHCR npm
+registry, `https://npm.pkg.github.com`). The package selects the registry via its own
+`publishConfig.registry`; auth uses the workflow `GITHUB_TOKEN` (never a plaintext PAT),
+and the job needs `permissions: { packages: write }`.
+
+```yaml
+- uses: chrysa/github-actions/publish-node-package@main
+  with:
+    package-dir: packages/typescript/ui
+    node-auth-token: ${{ secrets.GITHUB_TOKEN }}
+
+# Override the Node version or scope
+- uses: chrysa/github-actions/publish-node-package@main
+  with:
+    package-dir: packages/typescript/api-client
+    node-auth-token: ${{ secrets.GITHUB_TOKEN }}
+    node-version: '22'
+    scope: '@chrysa'
+```
+
 
 ### notion-branch-sync
 
