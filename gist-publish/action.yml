@@ -1,0 +1,55 @@
+description: Bump the multi-machine setup version, write its changelog, tag it and push
+  the files to the private gist
+inputs:
+  bump:
+    default: ''
+    description: Force a bump kind (patch|minor|major); empty derives it from the commit subject
+    required: false
+  gist-dir:
+    default: docs/multi-machine-setup/gist
+    description: Directory holding the files published to the gist
+    required: false
+  gist-id:
+    default: ''
+    description: Target gist id; empty skips the publish with a warning
+    required: false
+  gist-token:
+    description: Token with the gist scope
+    required: true
+  watch-dir:
+    default: docs/multi-machine-setup
+    description: Directory whose commits feed the changelog entry
+    required: false
+name: Publish the multi-machine setup gist
+outputs:
+  version:
+    description: The version that was published
+    value: ${{ steps.version.outputs.next }}
+runs:
+  steps:
+  - env:
+      BUMP_OVERRIDE: ${{ inputs.bump }}
+      GIST_DIR: ${{ inputs.gist-dir }}
+    id: version
+    name: Compute and write the next version
+    run: |
+      COMMIT_SUBJECT="$(git log -1 --pretty=%s)" bash "${GITHUB_ACTION_PATH}/../scripts/gist_bump_version.sh"
+    shell: bash
+  - env:
+      ENTRY_DATE: ${{ github.event.repository.updated_at }}
+      GIST_DIR: ${{ inputs.gist-dir }}
+      NEW_VERSION: ${{ steps.version.outputs.next }}
+      WATCH_DIR: ${{ inputs.watch-dir }}
+    name: Generate the changelog entry
+    run: ENTRY_DATE="$(date +%Y-%m-%d)" bash "${GITHUB_ACTION_PATH}/../scripts/gist_changelog.sh"
+    shell: bash
+  - env:
+      GH_TOKEN: ${{ inputs.gist-token }}
+      GIST_DIR: ${{ inputs.gist-dir }}
+      GIST_ID: ${{ inputs.gist-id }}
+      NEW_VERSION: ${{ steps.version.outputs.next }}
+      WATCH_DIR: ${{ inputs.watch-dir }}
+    name: Commit, tag and publish
+    run: bash "${GITHUB_ACTION_PATH}/../scripts/gist_publish.sh"
+    shell: bash
+  using: composite
