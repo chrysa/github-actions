@@ -1,0 +1,26 @@
+description: Enforce the chrysa branch model on a pull request (develop is the integration
+  branch; only a release promotion or a hotfix may target main)
+inputs:
+  base-ref:
+    default: ${{ github.base_ref }}
+    description: Branch the pull request targets
+    required: false
+  branch-pattern:
+    default: ^(feat|feature|fix|chore|docs|refactor|test|ci|build|perf|hotfix)/[a-z0-9._-]+$
+    description: Regex every source branch must match
+    required: false
+  head-ref:
+    default: ${{ github.head_ref }}
+    description: Source branch of the pull request
+    required: false
+name: Check branch policy
+runs:
+  steps:
+  - env:
+      BASE_NAME: ${{ inputs.base-ref }}
+      BRANCH_NAME: ${{ inputs.head-ref }}
+      BRANCH_PATTERN: ${{ inputs.branch-pattern }}
+    name: Validate PR source branch
+    run: bash "${GITHUB_ACTION_PATH}/../scripts/check_branch_policy.sh"
+    shell: bash
+  using: composite

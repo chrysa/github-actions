@@ -10,7 +10,7 @@
 #     workflow_dispatch: { inputs: { tag: { required: true } } }
 #   jobs:
 #     deploy:
-#       uses: chrysa/github-actions/.github/workflows/deploy.yml@main
+#       uses: chrysa/github-actions/.github/workflows/deploy.yml@v1.6.0
 #       with:
 #         image-base: ghcr.io/chrysa/my-app
 #         backend-context: backend            # '.' for single-package repos
