@@ -3,6 +3,17 @@ name: Release
 
 on:
     workflow_call:
+        secrets:
+            # Read as `secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN`, so a caller that has
+            # no PAT still works. Declaring it is what lets a caller pass it by name instead
+            # of `secrets: inherit` — an undeclared secret is simply not received, so the
+            # explicit form silently fell back to GITHUB_TOKEN and could not push a tag to a
+            # protected branch (annexe CI-021).
+            RELEASE_TOKEN:
+                description: >-
+                    PAT used to push the tag and create the release; falls back to the
+                    workflow GITHUB_TOKEN when absent.
+                required: false
 
 permissions:
     contents: write
