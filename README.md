@@ -22,6 +22,7 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/sonar-scan-node@main` | SonarCloud scan (Node.js / TypeScript) |
 | `chrysa/github-actions/sonar-js-scan@main` | SonarCloud scan (JS / Google Apps Script) |
 | `chrysa/github-actions/publish-python-package@main` | Build + publish Python package to PyPI |
+| `chrysa/github-actions/publish-node-package@main` | Build + publish a scoped npm package to GitHub Packages (private GHCR npm) |
 | `chrysa/github-actions/notion-branch-sync@main` | Sync the pushed branch to the Notion Branch Activity database |
 | `chrysa/github-actions/notion-roadmap-sync@main` | Sync an issue/PR event to the Notion roadmap row |
 | `chrysa/github-actions/lint-yaml@main` | yamllint over the repo's YAML |
@@ -29,6 +30,8 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/lint-docker@main` | hadolint over Dockerfiles |
 | `chrysa/github-actions/lint-helm@main` | `helm lint --strict` per chart |
 | `chrysa/github-actions/validate-terraform@main` | terraform init/validate/fmt (never applies) |
+| `chrysa/github-actions/check-branch-policy@main` | Enforce the chrysa branch model on a PR |
+| `chrysa/github-actions/gist-publish@main` | Version, changelog and publish the multi-machine setup gist |
 
 ## Usage
 
@@ -256,6 +259,29 @@ Build and publish a Python package to PyPI.
     repository-url: 'https://test.pypi.org/legacy/'
 ```
 
+### publish-node-package
+
+Build and publish a scoped npm package to **GitHub Packages** (the private GHCR npm
+registry, `https://npm.pkg.github.com`). The package selects the registry via its own
+`publishConfig.registry`; auth uses the workflow `GITHUB_TOKEN` (never a plaintext PAT),
+and the job needs `permissions: { packages: write }`.
+
+```yaml
+- uses: chrysa/github-actions/publish-node-package@main
+  with:
+    package-dir: packages/typescript/ui
+    node-auth-token: ${{ secrets.GITHUB_TOKEN }}
+
+# Override the Node version or scope
+- uses: chrysa/github-actions/publish-node-package@main
+  with:
+    package-dir: packages/typescript/api-client
+    node-auth-token: ${{ secrets.GITHUB_TOKEN }}
+    node-version: '22'
+    scope: '@chrysa'
+```
+
+
 ### notion-branch-sync
 
 Sync the pushed branch (commit, PR count, CI status, changelog excerpt) to the shared
@@ -311,4 +337,28 @@ composite actions. Every path/version is an input, so any repo can consume them.
 - uses: chrysa/github-actions/validate-terraform@main
   with:
     working-directory: terraform
+```
+
+### check-branch-policy
+
+Enforce the branch model on a pull request: `develop -> main` is the release promotion,
+`hotfix/*` is the only other branch allowed to target `main`, everything else must match
+`type/short-description` and integrate through `develop`.
+
+```yaml
+- uses: chrysa/github-actions/check-branch-policy@main
+```
+
+### gist-publish
+
+Bump `SETUP_VERSION`, write the changelog entry, tag, and push the multi-machine setup
+files to the private gist. Extracted from a 149-line workflow duplicated byte-identically
+in `chrysa-skills` and `claude-config`.
+
+```yaml
+- uses: chrysa/github-actions/gist-publish@main
+  with:
+    gist-token: ${{ secrets.GH_PAT_GIST }}
+    gist-id: ${{ secrets.CHRYSA_SETUP_GIST_ID }}
+    bump: ${{ github.event.inputs.bump }}
 ```

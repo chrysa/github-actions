@@ -3,6 +3,17 @@ name: Release
 
 on:
     workflow_call:
+        secrets:
+            # Read as `secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN`, so a caller that has
+            # no PAT still works. Declaring it is what lets a caller pass it by name instead
+            # of `secrets: inherit` — an undeclared secret is simply not received, so the
+            # explicit form silently fell back to GITHUB_TOKEN and could not push a tag to a
+            # protected branch (annexe CI-021).
+            RELEASE_TOKEN:
+                description: >-
+                    PAT used to push the tag and create the release; falls back to the
+                    workflow GITHUB_TOKEN when absent.
+                required: false
 
 permissions:
     contents: write
@@ -15,6 +26,7 @@ concurrency:
 jobs:
     release:
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         name: Create release
         steps:
             - uses: actions/checkout@v7.0.1
@@ -32,7 +44,7 @@ jobs:
               uses: gittools/actions/gitversion/execute@7417b1089e2c7de93510f1901d656ddf60bb024f # v4
 
             - name: Install git-cliff
-              uses: taiki-e/install-action@3f99142a47f5f35fcd7322b74947248526d32622 # git-cliff
+              uses: taiki-e/install-action@e215f18e24d7f4b411833009234c054235f9447f # git-cliff
 
             - name: Generate changelog
               id: changelog
