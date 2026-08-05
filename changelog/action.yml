@@ -1,0 +1,29 @@
+description: >-
+  Generate the release changelog with git-cliff for a version GitVersion has already
+  computed, so the notes describe the release actually being cut.
+inputs:
+  config:
+    default: cliff.toml
+    description: git-cliff configuration file (canonical, distributed by shared-standards)
+    required: false
+  version:
+    description: >-
+      Version being released, without the leading `v` — normally
+      `${{ steps.<id>.outputs.semVer }}` from the gitversion action.
+    required: true
+name: Changelog
+outputs:
+  content:
+    description: Changelog body for the release notes
+    value: ${{ steps.cliff.outputs.content }}
+runs:
+  steps:
+  # `--tag` is what makes git-cliff describe *this* release rather than the last tag it
+  # can find in the graph. Without it the notes silently belong to the previous version.
+  - id: cliff
+    name: Generate changelog
+    uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4.8.0
+    with:
+      args: --latest --strip header --tag v${{ inputs.version }}
+      config: ${{ inputs.config }}
+  using: composite
