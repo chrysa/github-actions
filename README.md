@@ -32,6 +32,8 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/validate-terraform@main` | terraform init/validate/fmt (never applies) |
 | `chrysa/github-actions/check-branch-policy@main` | Enforce the chrysa branch model on a PR |
 | `chrysa/github-actions/gist-publish@main` | Version, changelog and publish the multi-machine setup gist |
+| `chrysa/github-actions/changelog@main` | Generate the release changelog with git-cliff for a computed version |
+| `chrysa/github-actions/doc-drift@main` | Regenerate code-derived docs and fail if they drift from the committed copy |
 
 ## Usage
 
