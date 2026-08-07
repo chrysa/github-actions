@@ -41,7 +41,9 @@ def test_rich_text_truncates_and_stringifies() -> None:
 
 def test_notion_request_sends_token_and_returns_payload(mocker: MockerFixture) -> None:
     mocker.patch.dict("os.environ", {"NOTION_TOKEN": "secret-token"}, clear=False)
-    urlopen = mocker.patch.object(notion_api.urllib.request, "urlopen", return_value=_FakeResponse({"ok": True}))
+    urlopen = mocker.patch.object(
+        notion_api.urllib.request, "urlopen", return_value=_FakeResponse({"ok": True})
+    )
 
     result = notion_api.notion_request("POST", "pages", {"a": 1})
 
