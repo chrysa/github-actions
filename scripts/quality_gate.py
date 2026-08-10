@@ -44,7 +44,7 @@ class CommandSpec:
     """An ordered fallback chain of argv vectors, run without a shell.
 
     Each alternative is executed in order until one exits 0. This replaces the
-    previous ``shell=True`` single-string form: shell operators such as ``||``
+    previous single shell-interpreted string form: shell operators such as ``||``
     are no longer interpreted by a shell — fallbacks are expressed as multiple
     argv vectors instead. ``swallow_exit`` mirrors a trailing ``|| true``: the
     gate is then driven by its parsed metric rather than the tool's exit code.
@@ -150,7 +150,7 @@ class QualityGate:
         self.last_report_path = Path(self.LAST_REPORT_FILE)
 
         if not self.config_path.exists():
-            print(f"ERROR: configuration file not found: {self.CONFIG_FILE}")
+            sys.stderr.write(f"ERROR: configuration file not found: {self.CONFIG_FILE}\n")
             sys.exit(1)
 
         with open(self.config_path, encoding="utf-8") as handle:
@@ -357,7 +357,7 @@ class QualityGate:
         # not silently change whether its exit code gates. Moving security_vulns
         # into config dropped it once, and pip-audit finding a CVE failed the gate.
         spec = CommandSpec.parse(raw, swallow_exit=default_spec.swallow_exit) if raw is not None else default_spec
-        print(f"RUN_GATE|{gate_name}|{spec.display()}")
+        sys.stdout.write(f"RUN_GATE|{gate_name}|{spec.display()}\n")
         exit_code, output = self._run(spec)
         metric = self._parse_metric(gate_name, exit_code, output)
         return {
@@ -387,7 +387,7 @@ class QualityGate:
             json.dump(report, handle, indent=2)
 
     def baseline(self) -> bool:
-        print("BASELINE|START")
+        sys.stdout.write("BASELINE|START\n")
         baseline_data: dict[str, Any] = {
             "recorded_at": datetime.now().isoformat(),
             "gates": {},
@@ -402,8 +402,8 @@ class QualityGate:
                 all_ok = False
                 baseline_data["valid"] = False
             status = "PASS" if result["exit_code"] == 0 else "FAIL"
-            print(
-                f"GATE_RESULT|{gate_name}|{status}|metric={result['metric']}|exit={result['exit_code']}|mode=baseline"
+            sys.stdout.write(
+                f"GATE_RESULT|{gate_name}|{status}|metric={result['metric']}|exit={result['exit_code']}|mode=baseline\n"
             )
 
         with open(self.baseline_path, "w", encoding="utf-8") as handle:
@@ -422,15 +422,15 @@ class QualityGate:
         self._write_report(report)
 
         if all_ok:
-            print("OVERALL_RESULT|PASS")
+            sys.stdout.write("OVERALL_RESULT|PASS\n")
             return True
 
-        print("OVERALL_RESULT|FAIL")
-        print("ERROR: baseline contains failing gates; fix quality checks before using this baseline")
+        sys.stdout.write("OVERALL_RESULT|FAIL\n")
+        sys.stderr.write("ERROR: baseline contains failing gates; fix quality checks before using this baseline\n")
         return False
 
     def verify(self) -> bool:
-        print("VERIFY|START")
+        sys.stdout.write("VERIFY|START\n")
         if not self.baseline_path.exists():
             report = {
                 "mode": "verify",
@@ -439,8 +439,8 @@ class QualityGate:
                 "baseline_file": str(self.baseline_path),
             }
             self._write_report(report)
-            print("OVERALL_RESULT|SKIP")
-            print("WARNING: no baseline found — skipping regression check (run quality-gate-baseline to initialize)")
+            sys.stdout.write("OVERALL_RESULT|SKIP\n")
+            sys.stderr.write("WARNING: no baseline found — skipping regression check (run quality-gate-baseline to initialize)\n")
             return True
 
         with open(self.baseline_path, encoding="utf-8") as handle:
@@ -482,10 +482,10 @@ class QualityGate:
                 all_passed = False
 
             status = "PASS" if passed else "FAIL"
-            print(
+            sys.stdout.write(
                 f"GATE_RESULT|{gate_name}|{status}|baseline={baseline_metric}|"
                 f"target={target}|current={current_metric}|op={operator}|"
-                f"exit={current.get('exit_code', 1)}|reason={reason}"
+                f"exit={current.get('exit_code', 1)}|reason={reason}\n"
             )
 
             gate_reports.append(
@@ -513,16 +513,16 @@ class QualityGate:
         self._write_report(report)
 
         if all_passed:
-            print("OVERALL_RESULT|PASS")
+            sys.stdout.write("OVERALL_RESULT|PASS\n")
             return True
 
-        print("OVERALL_RESULT|FAIL")
+        sys.stdout.write("OVERALL_RESULT|FAIL\n")
         return False
 
 
 def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: python3 quality_gate.py [baseline|verify]")
+        sys.stderr.write("Usage: python3 quality_gate.py [baseline|verify]\n")
         sys.exit(1)
 
     command = sys.argv[1].strip().lower()
@@ -533,7 +533,7 @@ def main() -> None:
     if command == "verify":
         sys.exit(0 if quality_gate.verify() else 1)
 
-    print(f"Unknown command: {command}")
+    sys.stderr.write(f"Unknown command: {command}\n")
     sys.exit(1)
 
 
