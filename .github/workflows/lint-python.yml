@@ -26,12 +26,12 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 15
         steps:
-            - uses: actions/checkout@v7.0.0
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             # tool-setup = python-setup + install-project[extras]; ensures mypy
             # (language: system) and its stubs/deps are available for the replay.
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.3.0
+              uses: chrysa/github-actions/tool-setup@v1.6.0
               with:
                   python-version: ${{ inputs.python-version }}
                   extras: ${{ inputs.extras }}
@@ -39,7 +39,7 @@ jobs:
             # Replay every pre-commit hook, including pre-push-staged ones (mypy).
             # Hooks without an explicit `stages:` (ruff, ruff-format) run at all
             # stages, so a single invocation covers the full lint surface.
-            - uses: pre-commit/action@v3.0.1
+            - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
               with:
                   extra_args: --all-files --hook-stage pre-push
               env:

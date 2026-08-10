@@ -1,0 +1,27 @@
+description: Sync an issue or pull-request event to the project's Notion roadmap table
+  row
+inputs:
+  block-id:
+    description: Notion table-row block UUID for this project
+    required: true
+  notion-token:
+    description: Notion integration token
+    required: true
+name: Notion roadmap sync
+runs:
+  steps:
+  - env:
+      GITHUB_EVENT_ACTION: ${{ github.event.action }}
+      GITHUB_EVENT_NAME: ${{ github.event_name }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+      ISSUE_TITLE: ${{ github.event.issue.title }}
+      NOTION_BLOCK_ID: ${{ inputs.block-id }}
+      NOTION_TOKEN: ${{ inputs.notion-token }}
+      PR_MERGED: ${{ github.event.pull_request.merged }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PYTHONPATH: ${{ github.action_path }}/..
+    name: Sync event to Notion roadmap
+    run: python3 -m notion_sync.roadmap_sync
+    shell: bash
+  using: composite

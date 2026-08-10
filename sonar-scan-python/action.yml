@@ -8,6 +8,14 @@ inputs:
   github-token:
     description: GitHub token
     required: true
+  js-coverage-report:
+    default: ''
+    description: Optional path to a JavaScript/TypeScript LCOV coverage report (e.g.
+      web/coverage/lcov.info). When set AND the file exists, Sonar consumes it via
+      sonar.javascript.lcov.reportPaths so TS coverage counts alongside Python. LCOV
+      SF paths must be relative to the repo root (matching sonar.sources). Empty (the
+      default) leaves behaviour identical to before — no JS flag is emitted.
+    required: false
   junit-report:
     default: reports/junit.xml
     description: Path to JUnit XML test report
@@ -87,6 +95,22 @@ runs:
       \necho \"exclusions=$excl\" >> \"$GITHUB_OUTPUT\"\n"
     shell: bash
   - env:
+      JS_COVERAGE_REPORT: ${{ inputs.js-coverage-report }}
+    id: sonar-js
+    name: Resolve JavaScript/TypeScript LCOV coverage
+    run: |
+      js_cov_arg=""
+      trimmed="$(echo "$JS_COVERAGE_REPORT" | xargs)"
+      if [ -n "$trimmed" ]; then
+        if [ -f "$trimmed" ]; then
+          js_cov_arg="-Dsonar.javascript.lcov.reportPaths=$trimmed"
+        else
+          echo "js-coverage-report='$trimmed' set but file not found; omitting sonar.javascript.lcov.reportPaths"
+        fi
+      fi
+      echo "js_cov_arg=$js_cov_arg" >> "$GITHUB_OUTPUT"
+    shell: bash
+  - env:
       GITHUB_TOKEN: ${{ inputs.github-token }}
       SONAR_TOKEN: ${{ inputs.sonar-token }}
     name: SonarCloud Scan
@@ -98,8 +122,8 @@ runs:
         }} -Dsonar.python.version=${{ inputs.python-version }} -Dsonar.python.coverage.reportPaths=${{
         inputs.coverage-report }} -Dsonar.python.ruff.reportPaths=${{ inputs.ruff-report
         }} -Dsonar.python.mypy.reportPaths=${{ inputs.mypy-report }} -Dsonar.python.xunit.reportPath=${{
-        inputs.junit-report }} -Dsonar.exclusions=${{ steps.sonar-tests.outputs.exclusions
-        }}
+        inputs.junit-report }} ${{ steps.sonar-js.outputs.js_cov_arg }} -Dsonar.exclusions=${{
+        steps.sonar-tests.outputs.exclusions }}
 
         '
   using: composite

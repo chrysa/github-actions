@@ -1,0 +1,54 @@
+description: Build and publish a scoped npm package to GitHub Packages (the private GHCR npm registry)
+inputs:
+  node-auth-token:
+    description: Token with packages:write scope — pass the workflow GITHUB_TOKEN, never a plaintext PAT
+    required: true
+  node-version:
+    default: '22'
+    description: Node.js version for the build environment
+    required: false
+  package-dir:
+    description: Path to the package directory that holds package.json (e.g. packages/typescript/ui)
+    required: true
+  scope:
+    default: '@chrysa'
+    description: npm scope the package publishes under
+    required: false
+name: Publish Node package
+runs:
+  steps:
+  - name: Set up Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: ${{ inputs.node-version }}
+      registry-url: https://npm.pkg.github.com
+      scope: ${{ inputs.scope }}
+  - name: Install dependencies
+    run: npm install --no-audit --no-fund
+    shell: bash
+    working-directory: ${{ inputs.package-dir }}
+  - name: Build (if a build script is present)
+    run: npm run build --if-present
+    shell: bash
+    working-directory: ${{ inputs.package-dir }}
+  - name: Publish to GitHub Packages (idempotent)
+    # publishConfig.registry in the package's package.json selects the GHCR npm
+    # registry; setup-node writes the matching .npmrc with the auth token env var.
+    # Package versions are set by hand in package.json (decoupled from the repo's
+    # GitVersion tag), so a release re-run would otherwise 409 on an unchanged
+    # version. Skip when this name@version is already published — publish only the
+    # genuinely new ones, making the step safe to run on every release.
+    env:
+      NODE_AUTH_TOKEN: ${{ inputs.node-auth-token }}
+    run: |
+      name=$(node -p "require('./package.json').name")
+      version=$(node -p "require('./package.json').version")
+      if npm view "${name}@${version}" version >/dev/null 2>&1; then
+        echo "${name}@${version} is already published — skipping."
+      else
+        echo "Publishing ${name}@${version}…"
+        npm publish
+      fi
+    shell: bash
+    working-directory: ${{ inputs.package-dir }}
+  using: composite

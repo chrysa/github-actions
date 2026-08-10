@@ -10,14 +10,19 @@ permissions:
     issues: write
     pull-requests: write
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
     check_dependencies:
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         name: Check PR dependencies
 
         steps:
             - name: Check dependencies
-              uses: gregsdennis/dependencies-action@main
+              uses: gregsdennis/dependencies-action@a8cccab69814b9b985496cf97cbfe154c96c03c7 # main
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -25,7 +30,7 @@ jobs:
               if: >-
                   contains(github.event.pull_request.body, 'depends on') ||
                   contains(github.event.pull_request.body, 'blocked by')
-              uses: actions/github-script@v9
+              uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
               with:
                   script: |
                       await github.rest.issues.addLabels({

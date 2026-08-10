@@ -1,4 +1,9 @@
-# Skill: UX / UI / Ergonomics
+---
+name: ui-ux
+description: 'Use when building or reviewing ANY human-facing surface, not only web: - Web: React components/pages, Tailwind/shadcn, forms/tables/overlays, dark mode, i18n. - CLI/TUI: commands, flags, help, output, exit codes. - VS Code extension: commands, webviews, theming, notifications. - Discord bot: slash commands, embeds, interactive components. - Desktop/tray: native apps, system…'
+---
+
+# UX / UI / Ergonomics
 
 > Full reference: `shared-standards/docs/UX-UI-GUIDELINES.md`. This module is the actionable,
 > always-on contract loaded when building or reviewing UI.
@@ -10,7 +15,7 @@ Auto-invoke when building or reviewing ANY human-facing surface, not only web:
 - **CLI/TUI**: commands, flags, help, output, exit codes.
 - **VS Code extension**: commands, webviews, theming, notifications.
 - **Discord bot**: slash commands, embeds, interactive components.
-- **Desktop/tray**: native apps, system tray, notifications (windows-autonome, floating-agent…).
+- **Desktop/tray**: native apps, system tray, notifications (workstation-os, floating-agent…).
 - **Game UI (2D)**: HUD, menus, input remapping (Discordium…).
 - **Agent/conversational**: assistant/agent responses (lifeos, my-assistant, coach…).
 - **Alerts/notifications**: briefing/health/state alerts.

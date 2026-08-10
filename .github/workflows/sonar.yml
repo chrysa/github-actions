@@ -29,19 +29,28 @@ jobs:
         timeout-minutes: 15
         steps:
             - name: Checkout
-              uses: actions/checkout@v7.0.0
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   fetch-depth: 0
+            - uses: chrysa/github-actions/python-setup@v1.6.0 # v1.4.4
+              with:
+                  python-version: "3.14"
+            - name: Install test dependencies
+              run: "pip install --quiet --only-binary :all: pytest==8.4.2 pytest-cov==7.0.0 pytest-mock==3.15.1 pyyaml==6.0.3"
+            - name: Run tests with coverage
+              run: pytest --cov=notion_sync --cov-report=xml:coverage.xml
             - name: SonarCloud scan
-              uses: SonarSource/sonarqube-scan-action@v8.2.0
+              uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
               with:
                   args: >
                       -Dsonar.projectKey=chrysa_github-actions
                       -Dsonar.organization=chrysa
                       -Dsonar.projectName=github-actions
                       -Dsonar.sources=.
+                      -Dsonar.tests=tests
+                      -Dsonar.python.coverage.reportPaths=coverage.xml
                       -Dsonar.sourceEncoding=UTF-8
-                      -Dsonar.exclusions=**/__pycache__/**,**/*.pyc,**/.mypy_cache/**
+                      -Dsonar.exclusions=tests/**,**/__pycache__/**,**/*.pyc,**/.mypy_cache/**
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
