@@ -70,12 +70,12 @@ def main() -> int:
         with open(args.spec, encoding="utf-8") as f:
             spec = f.read()
     except OSError as e:
-        print(f"[APE] spec unreadable: {e}", file=sys.stderr)
+        sys.stderr.write(f"[APE] spec unreadable: {e}\n")
         return 0  # fail open: never block the user's turn
 
     # tell the model the triage result so it doesn't re-run Step 0 from scratch
-    print(f"<!-- APE regime (pre-triaged): {regime} -->\n")
-    print(spec)
+    sys.stdout.write(f"<!-- APE regime (pre-triaged): {regime} -->\n\n")
+    sys.stdout.write(f"{spec}\n")
     return 0
 
 
