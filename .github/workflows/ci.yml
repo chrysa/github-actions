@@ -31,7 +31,7 @@ jobs:
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-            - uses: chrysa/github-actions/python-setup@v1.6.0
+            - uses: chrysa/github-actions/python-setup@v1.8.0
               with:
                   python-version: "3.14"
 
@@ -48,7 +48,7 @@ jobs:
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-            - uses: chrysa/github-actions/python-setup@v1.6.0
+            - uses: chrysa/github-actions/python-setup@v1.8.0
               with:
                   python-version: "3.14"
 
