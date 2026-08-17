@@ -67,3 +67,6 @@ build: ## No-op — composite actions are deployed as YAML
 
 clean: ## Remove pre-commit caches
 	pre-commit clean 2>/dev/null || true
+
+.PHONY: ci
+ci: lint typecheck test  ## CI: run all checks (lint + typecheck + test)
