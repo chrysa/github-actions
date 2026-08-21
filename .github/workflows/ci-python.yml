@@ -105,7 +105,7 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.8.0
+              uses: chrysa/github-actions/tool-setup@v1.8.1
               with:
                   python-version: ${{ inputs.latest-python }}
                   extras: ${{ inputs.extras }}
@@ -128,14 +128,14 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.8.0
+              uses: chrysa/github-actions/tool-setup@v1.8.1
               with:
                   python-version: ${{ inputs.latest-python }}
                   extras: ${{ inputs.extras }}
 
             # Uploads the `ruff-report` artifact consumed by sonar-scan-python.
             - name: Ruff checks
-              uses: chrysa/github-actions/ruff-check@v1.8.0
+              uses: chrysa/github-actions/ruff-check@v1.8.1
               with:
                   python-version: ${{ inputs.latest-python }}
                   latest-python: ${{ inputs.latest-python }}
@@ -170,14 +170,14 @@ jobs:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.8.0
+              uses: chrysa/github-actions/tool-setup@v1.8.1
               with:
                   python-version: ${{ matrix.python-version }}
                   extras: ${{ inputs.extras }}
 
             # Uploads `test-results-<py>` (coverage.xml + junit.xml).
             - name: Run tests
-              uses: chrysa/github-actions/run-tests@v1.8.0
+              uses: chrysa/github-actions/run-tests@v1.8.1
               with:
                   cov-module: ${{ inputs.package }}
                   cov-fail-under: ${{ inputs.cov-fail-under }}
@@ -201,7 +201,7 @@ jobs:
             # Downloads test-results-<latest> (coverage + junit), ruff-report,
             # mypy-report, then runs the scan. Needs the project + SONAR_TOKEN.
             - name: SonarCloud scan
-              uses: chrysa/github-actions/sonar-scan-python@v1.8.0
+              uses: chrysa/github-actions/sonar-scan-python@v1.8.1
               with:
                   python-version: ${{ inputs.latest-python }}
                   sonar-token: ${{ secrets.SONAR_TOKEN }}
