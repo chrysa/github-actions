@@ -42,7 +42,7 @@ repos:
     hooks:
       - id: makefile-check
       - id: yaml-sorter
-        exclude: ^(\.github/|GitVersion\.yml)
+        exclude: ^(\.github/|workflows/|templates/|docker-compose)|(^|/)(pnpm-lock|yarn|uv|poetry)\.(yaml|lock)$|(^|/)\.pre-commit-config\.yaml$
       - id: json-sorter
       - id: env-file-check
       - id: adr-gate
