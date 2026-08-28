@@ -150,7 +150,7 @@ def main() -> int:
     context = read_context(dict(os.environ))
     branch_query = urllib.parse.quote(context["branch"])
     pulls = github_request(
-        f"repos/{context['repo']}/pulls?state=open&head={context['owner']}:{context['branch']}&per_page=10"
+        f"repos/{context['repo']}/pulls?state=open&head={context['owner']}:{branch_query}&per_page=10"
     )
     pr_count = len(pulls) if isinstance(pulls, list) else 0
     status = ci_status(

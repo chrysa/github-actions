@@ -5,8 +5,11 @@ inputs:
     description: Build backend to use (hatch or setuptools)
     required: false
   pypi-token:
-    description: PyPI API token for authentication
-    required: true
+    default: ''
+    description: 'PyPI API token. Optional: leave empty to publish via OIDC Trusted
+      Publishing (recommended; caller must grant `id-token: write` and register the
+      trusted publisher on PyPI).'
+    required: false
   python-version:
     default: '3.14'
     description: Python version for build environment
@@ -45,7 +48,13 @@ runs:
       TWINE_PASSWORD: ${{ inputs.pypi-token }}
       TWINE_REPOSITORY_URL: ${{ inputs.repository-url }}
       TWINE_USERNAME: __token__
-    name: Publish to PyPI
+    if: inputs.pypi-token != ''
+    name: Publish to PyPI (token)
     run: twine upload dist/*
     shell: bash
+  - if: inputs.pypi-token == ''
+    name: Publish to PyPI (OIDC Trusted Publishing)
+    uses: pypa/gh-action-pypi-publish@release/v1
+    with:
+      repository-url: ${{ inputs.repository-url }}
   using: composite

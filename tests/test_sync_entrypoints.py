@@ -32,7 +32,9 @@ def test_branch_sync_creates_a_row_when_none_exists(mocker: MockerFixture) -> No
     mocker.patch.dict("os.environ", BRANCH_ENV, clear=False)
     mocker.patch.object(branch_sync, "read_changelog_excerpt", return_value="")
     mocker.patch.object(branch_sync, "github_request", return_value=[])
-    notion = mocker.patch.object(branch_sync, "notion_request", side_effect=[{"results": []}, {"id": "page-1"}])
+    notion = mocker.patch.object(
+        branch_sync, "notion_request", side_effect=[{"results": []}, {"id": "page-1"}]
+    )
 
     assert branch_sync.main() == 0
     assert notion.call_args_list[-1].args[0] == "POST"
@@ -119,4 +121,5 @@ def test_roadmap_sync_patches_the_row(mocker: MockerFixture) -> None:
     assert roadmap_sync.main() == 0
     method, path, body = notion.call_args_list[-1].args
     assert (method, path) == ("PATCH", "blocks/b")
-    assert body["table_row"]["cells"][roadmap_sync.CELL_CURRENT_TASK][0]["text"]["content"] == "Issue#3 bug [opened]"
+    cell = body["table_row"]["cells"][roadmap_sync.CELL_CURRENT_TASK]
+    assert cell[0]["text"]["content"] == "Issue#3 bug [opened]"

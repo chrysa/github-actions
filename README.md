@@ -23,28 +23,30 @@ The examples below use `@v1.8.0`. Bump the tag deliberately — Dependabot's
 
 | Action | Description |
 |---|---|
-| `chrysa/github-actions/python-setup@v1.8.0` | Set up Python + upgrade pip |
-| `chrysa/github-actions/install-project@v1.8.0` | `pip install -e '.[extras]'` |
-| `chrysa/github-actions/tool-setup@v1.8.0` | python-setup + install-project |
-| `chrysa/github-actions/gitversion@v1.8.0` | Compute semver from git history |
-| `chrysa/github-actions/ruff-check@v1.8.0` | ruff lint + format + JSON report |
-| `chrysa/github-actions/mypy-check@v1.8.0` | mypy type check + txt report |
-| `chrysa/github-actions/run-tests@v1.8.0` | pytest + coverage + Codecov |
-| `chrysa/github-actions/sonar-scan@v1.8.0` | SonarCloud scan (generic Python) |
-| `chrysa/github-actions/sonar-scan-python@v1.8.0` | SonarCloud scan (Python-specific) |
-| `chrysa/github-actions/sonar-scan-node@v1.8.0` | SonarCloud scan (Node.js / TypeScript) |
-| `chrysa/github-actions/sonar-js-scan@v1.8.0` | SonarCloud scan (JS / Google Apps Script) |
-| `chrysa/github-actions/publish-python-package@v1.8.0` | Build + publish Python package to PyPI |
-| `chrysa/github-actions/publish-node-package@v1.8.0` | Build + publish a scoped npm package to GitHub Packages (private GHCR npm) |
-| `chrysa/github-actions/notion-branch-sync@v1.8.0` | Sync the pushed branch to the Notion Branch Activity database |
-| `chrysa/github-actions/notion-roadmap-sync@v1.8.0` | Sync an issue/PR event to the Notion roadmap row |
-| `chrysa/github-actions/lint-yaml@v1.8.0` | yamllint over the repo's YAML |
-| `chrysa/github-actions/lint-bash@v1.8.0` | shellcheck + shfmt over shell scripts |
-| `chrysa/github-actions/lint-docker@v1.8.0` | hadolint over Dockerfiles |
-| `chrysa/github-actions/lint-helm@v1.8.0` | `helm lint --strict` per chart |
-| `chrysa/github-actions/validate-terraform@v1.8.0` | terraform init/validate/fmt (never applies) |
-| `chrysa/github-actions/check-branch-policy@v1.8.0` | Enforce the chrysa branch model on a PR |
-| `chrysa/github-actions/gist-publish@v1.8.0` | Version, changelog and publish the multi-machine setup gist |
+| `chrysa/github-actions/python-setup@main` | Set up Python + upgrade pip |
+| `chrysa/github-actions/install-project@main` | `pip install -e '.[extras]'` |
+| `chrysa/github-actions/tool-setup@main` | python-setup + install-project |
+| `chrysa/github-actions/gitversion@main` | Compute semver from git history |
+| `chrysa/github-actions/ruff-check@main` | ruff lint + format + JSON report |
+| `chrysa/github-actions/mypy-check@main` | mypy type check + txt report |
+| `chrysa/github-actions/run-tests@main` | pytest + coverage + Codecov |
+| `chrysa/github-actions/sonar-scan@main` | SonarCloud scan (generic Python) |
+| `chrysa/github-actions/sonar-scan-python@main` | SonarCloud scan (Python-specific) |
+| `chrysa/github-actions/sonar-scan-node@main` | SonarCloud scan (Node.js / TypeScript) |
+| `chrysa/github-actions/sonar-js-scan@main` | SonarCloud scan (JS / Google Apps Script) |
+| `chrysa/github-actions/publish-python-package@main` | Build + publish Python package to PyPI |
+| `chrysa/github-actions/publish-node-package@main` | Build + publish a scoped npm package to GitHub Packages (private GHCR npm) |
+| `chrysa/github-actions/notion-branch-sync@main` | Sync the pushed branch to the Notion Branch Activity database |
+| `chrysa/github-actions/notion-roadmap-sync@main` | Sync an issue/PR event to the Notion roadmap row |
+| `chrysa/github-actions/lint-yaml@main` | yamllint over the repo's YAML |
+| `chrysa/github-actions/lint-bash@main` | shellcheck + shfmt over shell scripts |
+| `chrysa/github-actions/lint-docker@main` | hadolint over Dockerfiles |
+| `chrysa/github-actions/lint-helm@main` | `helm lint --strict` per chart |
+| `chrysa/github-actions/validate-terraform@main` | terraform init/validate/fmt (never applies) |
+| `chrysa/github-actions/check-branch-policy@main` | Enforce the chrysa branch model on a PR |
+| `chrysa/github-actions/gist-publish@main` | Version, changelog and publish the multi-machine setup gist |
+| `chrysa/github-actions/changelog@main` | Generate the release changelog with git-cliff for a computed version |
+| `chrysa/github-actions/doc-drift@main` | Regenerate code-derived docs and fail if they drift from the committed copy |
 
 ## Usage
 

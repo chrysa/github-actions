@@ -102,10 +102,10 @@ jobs:
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.1
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.6.0
+              uses: chrysa/github-actions/tool-setup@v1.8.1
               with:
                   python-version: ${{ inputs.latest-python }}
                   extras: ${{ inputs.extras }}
@@ -125,17 +125,17 @@ jobs:
         permissions:
             contents: read
         steps:
-            - uses: actions/checkout@v7.0.1
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.6.0
+              uses: chrysa/github-actions/tool-setup@v1.8.1
               with:
                   python-version: ${{ inputs.latest-python }}
                   extras: ${{ inputs.extras }}
 
             # Uploads the `ruff-report` artifact consumed by sonar-scan-python.
             - name: Ruff checks
-              uses: chrysa/github-actions/ruff-check@v1.6.0
+              uses: chrysa/github-actions/ruff-check@v1.8.1
               with:
                   python-version: ${{ inputs.latest-python }}
                   latest-python: ${{ inputs.latest-python }}
@@ -149,7 +149,7 @@ jobs:
               shell: bash
 
             - name: Upload mypy report
-              uses: actions/upload-artifact@v7
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
               with:
                   name: mypy-report
                   path: reports/mypy.txt
@@ -167,17 +167,17 @@ jobs:
             matrix:
                 python-version: ${{ fromJSON(inputs.python-versions) }}
         steps:
-            - uses: actions/checkout@v7.0.1
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup environment
-              uses: chrysa/github-actions/tool-setup@v1.6.0
+              uses: chrysa/github-actions/tool-setup@v1.8.1
               with:
                   python-version: ${{ matrix.python-version }}
                   extras: ${{ inputs.extras }}
 
             # Uploads `test-results-<py>` (coverage.xml + junit.xml).
             - name: Run tests
-              uses: chrysa/github-actions/run-tests@v1.6.0
+              uses: chrysa/github-actions/run-tests@v1.8.1
               with:
                   cov-module: ${{ inputs.package }}
                   cov-fail-under: ${{ inputs.cov-fail-under }}
@@ -194,14 +194,14 @@ jobs:
             contents: read
             pull-requests: read
         steps:
-            - uses: actions/checkout@v7.0.1
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   fetch-depth: 0
 
             # Downloads test-results-<latest> (coverage + junit), ruff-report,
             # mypy-report, then runs the scan. Needs the project + SONAR_TOKEN.
             - name: SonarCloud scan
-              uses: chrysa/github-actions/sonar-scan-python@v1.6.0
+              uses: chrysa/github-actions/sonar-scan-python@v1.8.1
               with:
                   python-version: ${{ inputs.latest-python }}
                   sonar-token: ${{ secrets.SONAR_TOKEN }}
