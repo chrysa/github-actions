@@ -44,7 +44,7 @@ class CommandSpec:
     """An ordered fallback chain of argv vectors, run without a shell.
 
     Each alternative is executed in order until one exits 0. This replaces the
-    previous ``shell=True`` single-string form: shell operators such as ``||``
+    previous single-string shell form: shell operators such as ``||``
     are no longer interpreted by a shell — fallbacks are expressed as multiple
     argv vectors instead. ``swallow_exit`` mirrors a trailing ``|| true``: the
     gate is then driven by its parsed metric rather than the tool's exit code.
