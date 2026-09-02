@@ -10,30 +10,30 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 
 | Action | Description |
 |---|---|
-| `chrysa/github-actions/python-setup@main` | Set up Python + upgrade pip |
-| `chrysa/github-actions/install-project@main` | `pip install -e '.[extras]'` |
-| `chrysa/github-actions/tool-setup@main` | python-setup + install-project |
-| `chrysa/github-actions/gitversion@main` | Compute semver from git history |
-| `chrysa/github-actions/ruff-check@main` | ruff lint + format + JSON report |
-| `chrysa/github-actions/mypy-check@main` | mypy type check + txt report |
-| `chrysa/github-actions/run-tests@main` | pytest + coverage + Codecov |
-| `chrysa/github-actions/sonar-scan@main` | SonarCloud scan (generic Python) |
-| `chrysa/github-actions/sonar-scan-python@main` | SonarCloud scan (Python-specific) |
-| `chrysa/github-actions/sonar-scan-node@main` | SonarCloud scan (Node.js / TypeScript) |
-| `chrysa/github-actions/sonar-js-scan@main` | SonarCloud scan (JS / Google Apps Script) |
-| `chrysa/github-actions/publish-python-package@main` | Build + publish Python package to PyPI |
-| `chrysa/github-actions/publish-node-package@main` | Build + publish a scoped npm package to GitHub Packages (private GHCR npm) |
-| `chrysa/github-actions/notion-branch-sync@main` | Sync the pushed branch to the Notion Branch Activity database |
-| `chrysa/github-actions/notion-roadmap-sync@main` | Sync an issue/PR event to the Notion roadmap row |
-| `chrysa/github-actions/lint-yaml@main` | yamllint over the repo's YAML |
-| `chrysa/github-actions/lint-bash@main` | shellcheck + shfmt over shell scripts |
-| `chrysa/github-actions/lint-docker@main` | hadolint over Dockerfiles |
-| `chrysa/github-actions/lint-helm@main` | `helm lint --strict` per chart |
-| `chrysa/github-actions/validate-terraform@main` | terraform init/validate/fmt (never applies) |
-| `chrysa/github-actions/check-branch-policy@main` | Enforce the chrysa branch model on a PR |
-| `chrysa/github-actions/gist-publish@main` | Version, changelog and publish the multi-machine setup gist |
-| `chrysa/github-actions/changelog@main` | Generate the release changelog with git-cliff for a computed version |
-| `chrysa/github-actions/doc-drift@main` | Regenerate code-derived docs and fail if they drift from the committed copy |
+| `chrysa/github-actions/python-setup@v1` | Set up Python + upgrade pip |
+| `chrysa/github-actions/install-project@v1` | `pip install -e '.[extras]'` |
+| `chrysa/github-actions/tool-setup@v1` | python-setup + install-project |
+| `chrysa/github-actions/gitversion@v1` | Compute semver from git history |
+| `chrysa/github-actions/ruff-check@v1` | ruff lint + format + JSON report |
+| `chrysa/github-actions/mypy-check@v1` | mypy type check + txt report |
+| `chrysa/github-actions/run-tests@v1` | pytest + coverage + Codecov |
+| `chrysa/github-actions/sonar-scan@v1` | SonarCloud scan (generic Python) |
+| `chrysa/github-actions/sonar-scan-python@v1` | SonarCloud scan (Python-specific) |
+| `chrysa/github-actions/sonar-scan-node@v1` | SonarCloud scan (Node.js / TypeScript) |
+| `chrysa/github-actions/sonar-js-scan@v1` | SonarCloud scan (JS / Google Apps Script) |
+| `chrysa/github-actions/publish-python-package@v1` | Build + publish Python package to PyPI |
+| `chrysa/github-actions/publish-node-package@v1` | Build + publish a scoped npm package to GitHub Packages (private GHCR npm) |
+| `chrysa/github-actions/notion-branch-sync@v1` | Sync the pushed branch to the Notion Branch Activity database |
+| `chrysa/github-actions/notion-roadmap-sync@v1` | Sync an issue/PR event to the Notion roadmap row |
+| `chrysa/github-actions/lint-yaml@v1` | yamllint over the repo's YAML |
+| `chrysa/github-actions/lint-bash@v1` | shellcheck + shfmt over shell scripts |
+| `chrysa/github-actions/lint-docker@v1` | hadolint over Dockerfiles |
+| `chrysa/github-actions/lint-helm@v1` | `helm lint --strict` per chart |
+| `chrysa/github-actions/validate-terraform@v1` | terraform init/validate/fmt (never applies) |
+| `chrysa/github-actions/check-branch-policy@v1` | Enforce the chrysa branch model on a PR |
+| `chrysa/github-actions/gist-publish@v1` | Version, changelog and publish the multi-machine setup gist |
+| `chrysa/github-actions/changelog@v1` | Generate the release changelog with git-cliff for a computed version |
+| `chrysa/github-actions/doc-drift@v1` | Regenerate code-derived docs and fail if they drift from the committed copy |
 
 ## Usage
 
@@ -42,7 +42,7 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 Set up Python and upgrade pip.
 
 ```yaml
-- uses: chrysa/github-actions/python-setup@main
+- uses: chrysa/github-actions/python-setup@v1
   with:
     python-version: '3.14'
 ```
@@ -53,10 +53,10 @@ Install a pip-based project with optional extras.
 
 ```yaml
 # Minimal
-- uses: chrysa/github-actions/install-project@main
+- uses: chrysa/github-actions/install-project@v1
 
 # With extras
-- uses: chrysa/github-actions/install-project@main
+- uses: chrysa/github-actions/install-project@v1
   with:
     extras: 'lint,test,dead_code'
 ```
@@ -66,7 +66,7 @@ Install a pip-based project with optional extras.
 Combined Python setup + project install (wraps python-setup + install-project).
 
 ```yaml
-- uses: chrysa/github-actions/tool-setup@main
+- uses: chrysa/github-actions/tool-setup@v1
   with:
     python-version: '3.14'
     extras: 'lint,test'
@@ -82,7 +82,7 @@ Compute semantic versioning from git history using GitVersion.
     fetch-depth: 0
 
 - id: version
-  uses: chrysa/github-actions/gitversion@main
+  uses: chrysa/github-actions/gitversion@v1
 
 - run: echo "Version: ${{ steps.version.outputs.semVer }}"
 ```
@@ -94,14 +94,14 @@ Compute semantic versioning from git history using GitVersion.
 Run ruff lint and format checks, upload JSON report on latest Python.
 
 ```yaml
-- uses: chrysa/github-actions/ruff-check@main
+- uses: chrysa/github-actions/ruff-check@v1
   with:
     python-version: ${{ matrix.python-version }}
     latest-python: '3.14'
     sources: 'src tests'
 
 # With custom config
-- uses: chrysa/github-actions/ruff-check@main
+- uses: chrysa/github-actions/ruff-check@v1
   with:
     python-version: ${{ matrix.python-version }}
     latest-python: '3.14'
@@ -114,14 +114,14 @@ Run ruff lint and format checks, upload JSON report on latest Python.
 Run mypy type check and upload text report on latest Python.
 
 ```yaml
-- uses: chrysa/github-actions/mypy-check@main
+- uses: chrysa/github-actions/mypy-check@v1
   with:
     python-version: ${{ matrix.python-version }}
     latest-python: '3.14'
     sources: 'src'
 
 # With custom config
-- uses: chrysa/github-actions/mypy-check@main
+- uses: chrysa/github-actions/mypy-check@v1
   with:
     python-version: ${{ matrix.python-version }}
     latest-python: '3.14'
@@ -134,7 +134,7 @@ Run mypy type check and upload text report on latest Python.
 Run pytest suite, upload results, publish to PR and send coverage to Codecov.
 
 ```yaml
-- uses: chrysa/github-actions/run-tests@main
+- uses: chrysa/github-actions/run-tests@v1
   with:
     python-version: ${{ matrix.python-version }}
     latest-python: '3.14'
@@ -146,7 +146,7 @@ Run pytest suite, upload results, publish to PR and send coverage to Codecov.
 Download analysis reports and run SonarCloud scan (generic Python).
 
 ```yaml
-- uses: chrysa/github-actions/sonar-scan@main
+- uses: chrysa/github-actions/sonar-scan@v1
   with:
     latest-python: '3.14'
     sonar-token: ${{ secrets.SONAR_TOKEN }}
@@ -165,7 +165,7 @@ Simplified interface with configurable report paths.
 
 ```yaml
 # Minimal
-- uses: chrysa/github-actions/sonar-scan-python@main
+- uses: chrysa/github-actions/sonar-scan-python@v1
   with:
     python-version: '3.14'
     sonar-token: ${{ secrets.SONAR_TOKEN }}
@@ -175,7 +175,7 @@ Simplified interface with configurable report paths.
     project-name: 'my-project'
 
 # Full
-- uses: chrysa/github-actions/sonar-scan-python@main
+- uses: chrysa/github-actions/sonar-scan-python@v1
   with:
     python-version: '3.14'
     sonar-token: ${{ secrets.SONAR_TOKEN }}
@@ -196,7 +196,7 @@ Simplified interface with configurable report paths.
 Run SonarCloud scan for Node.js / TypeScript projects.
 
 ```yaml
-- uses: chrysa/github-actions/sonar-scan-node@main
+- uses: chrysa/github-actions/sonar-scan-node@v1
   with:
     sonar-token: ${{ secrets.SONAR_TOKEN }}
     github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -213,7 +213,7 @@ Run SonarCloud scan for JavaScript / Google Apps Script projects, with optional 
 
 ```yaml
 # Minimal
-- uses: chrysa/github-actions/sonar-js-scan@main
+- uses: chrysa/github-actions/sonar-js-scan@v1
   with:
     sonar-token: ${{ secrets.SONAR_TOKEN }}
     github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -222,7 +222,7 @@ Run SonarCloud scan for JavaScript / Google Apps Script projects, with optional 
     project-name: 'my-project'
 
 # Full (with coverage artifact)
-- uses: chrysa/github-actions/sonar-js-scan@main
+- uses: chrysa/github-actions/sonar-js-scan@v1
   with:
     sonar-token: ${{ secrets.SONAR_TOKEN }}
     github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -243,18 +243,18 @@ Build and publish a Python package to PyPI.
 
 ```yaml
 # With hatch (default)
-- uses: chrysa/github-actions/publish-python-package@main
+- uses: chrysa/github-actions/publish-python-package@v1
   with:
     pypi-token: ${{ secrets.PYPI_TOKEN }}
 
 # With setuptools
-- uses: chrysa/github-actions/publish-python-package@main
+- uses: chrysa/github-actions/publish-python-package@v1
   with:
     pypi-token: ${{ secrets.PYPI_TOKEN }}
     build-backend: 'setuptools'
 
 # Publish to TestPyPI
-- uses: chrysa/github-actions/publish-python-package@main
+- uses: chrysa/github-actions/publish-python-package@v1
   with:
     pypi-token: ${{ secrets.TEST_PYPI_TOKEN }}
     build-backend: 'hatch'
@@ -269,13 +269,13 @@ registry, `https://npm.pkg.github.com`). The package selects the registry via it
 and the job needs `permissions: { packages: write }`.
 
 ```yaml
-- uses: chrysa/github-actions/publish-node-package@main
+- uses: chrysa/github-actions/publish-node-package@v1
   with:
     package-dir: packages/typescript/ui
     node-auth-token: ${{ secrets.GITHUB_TOKEN }}
 
 # Override the Node version or scope
-- uses: chrysa/github-actions/publish-node-package@main
+- uses: chrysa/github-actions/publish-node-package@v1
   with:
     package-dir: packages/typescript/api-client
     node-auth-token: ${{ secrets.GITHUB_TOKEN }}
@@ -293,7 +293,7 @@ Notion "Branch Activity" database. Requires a full-history checkout for the chan
 - uses: actions/checkout@v7.0.1
   with:
     fetch-depth: 0
-- uses: chrysa/github-actions/notion-branch-sync@main
+- uses: chrysa/github-actions/notion-branch-sync@v1
   with:
     notion-token: ${{ secrets.NOTION_TOKEN }}
     branches-db-id: ${{ vars.NOTION_BRANCHES_DB_ID }}
@@ -305,7 +305,7 @@ Notion "Branch Activity" database. Requires a full-history checkout for the chan
 Sync an issue or pull-request event to the project's Notion roadmap table row.
 
 ```yaml
-- uses: chrysa/github-actions/notion-roadmap-sync@main
+- uses: chrysa/github-actions/notion-roadmap-sync@v1
   with:
     notion-token: ${{ secrets.NOTION_TOKEN }}
     block-id: ${{ vars.NOTION_PROJECT_BLOCK_ID }}
@@ -322,21 +322,21 @@ Infrastructure linters extracted from `chrysa/server`, where they lived as repo-
 composite actions. Every path/version is an input, so any repo can consume them.
 
 ```yaml
-- uses: chrysa/github-actions/lint-yaml@main
+- uses: chrysa/github-actions/lint-yaml@v1
   with:
     config-file: .yamllint.yaml
     exclude-paths: "./.git/* ./archive/*"
 
-- uses: chrysa/github-actions/lint-bash@main       # severity, indent, exclude-paths
-- uses: chrysa/github-actions/lint-docker@main     # hadolint-version, failure-threshold
-- uses: chrysa/github-actions/lint-helm@main
+- uses: chrysa/github-actions/lint-bash@v1       # severity, indent, exclude-paths
+- uses: chrysa/github-actions/lint-docker@v1     # hadolint-version, failure-threshold
+- uses: chrysa/github-actions/lint-helm@v1
   with:
     charts-root: apps
     helm-repositories: |
       bjw-s https://bjw-s-labs.github.io/helm-charts
       traefik https://helm.traefik.io/traefik
 
-- uses: chrysa/github-actions/validate-terraform@main
+- uses: chrysa/github-actions/validate-terraform@v1
   with:
     working-directory: terraform
 ```
@@ -348,7 +348,7 @@ Enforce the branch model on a pull request: `develop -> main` is the release pro
 `type/short-description` and integrate through `develop`.
 
 ```yaml
-- uses: chrysa/github-actions/check-branch-policy@main
+- uses: chrysa/github-actions/check-branch-policy@v1
 ```
 
 ### gist-publish
@@ -358,7 +358,7 @@ files to the private gist. Extracted from a 149-line workflow duplicated byte-id
 in `chrysa-skills` and `claude-config`.
 
 ```yaml
-- uses: chrysa/github-actions/gist-publish@main
+- uses: chrysa/github-actions/gist-publish@v1
   with:
     gist-token: ${{ secrets.GH_PAT_GIST }}
     gist-id: ${{ secrets.CHRYSA_SETUP_GIST_ID }}
