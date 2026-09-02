@@ -53,10 +53,11 @@ jobs:
                   BANDIT_SEVERITY: ${{ inputs.bandit-severity }}
               run: |
                   python -m pip install 'bandit[toml]'
+                  read -ra dirs <<< "$SOURCE_DIRS"
                   if grep -q '^\[tool.bandit\]' pyproject.toml 2>/dev/null; then
-                      bandit -c pyproject.toml -r $SOURCE_DIRS "$BANDIT_SEVERITY"
+                      bandit -c pyproject.toml -r "${dirs[@]}" "$BANDIT_SEVERITY"
                   else
-                      bandit -r $SOURCE_DIRS "$BANDIT_SEVERITY"
+                      bandit -r "${dirs[@]}" "$BANDIT_SEVERITY"
                   fi
 
     trivy-fs:
