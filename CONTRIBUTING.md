@@ -1,7 +1,7 @@
 # Contributing to github-actions
 
 Thanks for contributing. This repo follows the chrysa
-[chrysa standards](https://github.com/chrysa/dev-kit/blob/main/standards/STANDARDS.md).
+[chrysa standards](https://github.com/chrysa/shared-standards/blob/main/standards/STANDARDS.chrysa.md).
 
 ## Prerequisites
 
