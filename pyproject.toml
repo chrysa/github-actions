@@ -12,6 +12,7 @@ version = "0.0.0"
 packages = ["notion_sync"]
 
 [tool.ruff]
+extend-exclude = [".claude", "scripts/quality_gate.py"]
 line-length = 110
 target-version = "py312"
 
