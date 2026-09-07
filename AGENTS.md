@@ -88,6 +88,7 @@ This project is indexed by GitNexus as **github-actions**. Use the GitNexus MCP 
 ### Documentation & session state · `standards/rules/docs.md`
 - Notion logging
 - Documentation and Notion are maintained in lockstep with the code — a change that leaves them stale is unfinished
+- Every repo ships generated context files
 - Session lifecycle (primer + memory + hindsight)
 
 ### AI agents & features · `standards/rules/agents.md`
