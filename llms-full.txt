@@ -107,7 +107,6 @@ Composite GitHub Actions and their tested Python entrypoints for the chrysa flee
     action-check.yml
     approved-label.yml
     auto-assign.yml
-    auto-update-pre-commit.yml
     ci-fullstack.yml
     ci-python-app.yml
     ci-python.yml
@@ -204,6 +203,7 @@ run-tests/
 scripts/
   README.md
   check_branch_policy.sh
+  gen_context_files.py
   gist_bump_version.sh
   gist_changelog.sh
   gist_publish.sh
@@ -269,6 +269,7 @@ notion_sync/branch_sync.py — Sync the pushed branch to the shared Notion "Bran
 notion_sync/logging_setup.py — Logging wired to the GitHub Actions log stream.
 notion_sync/notion_api.py — Minimal stdlib-only Notion + GitHub REST helpers shared by the sync entrypoints.
 notion_sync/roadmap_sync.py — Sync an issue/PR event to the project's Notion roadmap table row.
+scripts/gen_context_files.py — Generate the standardised per-repo context files from the repo's own content.
 scripts/quality_gate.py
 tests/test_actions_yaml.py — Every composite action definition in this repo must be valid and runnable.
 tests/test_branch_sync.py — Unit tests for the branch-sync entrypoint (pure functions, no network).
