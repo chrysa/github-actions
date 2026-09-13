@@ -12,6 +12,7 @@ version = "0.0.0"
 packages = ["notion_sync"]
 
 [tool.ruff]
+extend-exclude = [".claude", "scripts/quality_gate.py"]
 line-length = 110
 target-version = "py312"
 
@@ -22,3 +23,8 @@ select = ["B", "C90", "E", "F", "I", "PERF", "PL", "RUF", "SIM", "UP"]
 addopts = "-q"
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["PLR2004"]
+"**/test_*.py" = ["PLR2004"]
+"**/conftest.py" = ["PLR2004"]
