@@ -1,0 +1,54 @@
+---
+name: Enforce Shortcut Link Policy
+
+on:
+    workflow_call:
+        inputs:
+            allow-label:
+                description: >-
+                    Escape-hatch label that waives the Shortcut requirement
+                    (e.g. dependabot bumps, one-off chores). Applied on the PR.
+                required: false
+                type: string
+                default: "no-story"
+
+permissions:
+    contents: read
+
+jobs:
+    shortcut-link:
+        if: github.actor != 'dependabot[bot]'
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Require a Shortcut story reference
+              shell: bash
+              env:
+                  PR_TITLE: ${{ github.event.pull_request.title }}
+                  PR_BODY: ${{ github.event.pull_request.body }}
+                  BRANCH_NAME: ${{ github.head_ref }}
+                  PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+                  ALLOW_LABEL: ${{ inputs.allow-label }}
+              run: |
+                  # Documented escape hatch: label the PR to waive the check.
+                  if [[ ",$PR_LABELS," == *",$ALLOW_LABEL,"* ]]; then
+                    echo "Label '$ALLOW_LABEL' present — Shortcut link waived."
+                    exit 0
+                  fi
+
+                  # A Shortcut story ref: sc-1234, [sc-1234], or a story URL.
+                  pattern='(sc-[0-9]+|app\.shortcut\.com/[^ ]+/story/[0-9]+)'
+                  blob="$PR_TITLE"$'\n'"$PR_BODY"$'\n'"$BRANCH_NAME"
+
+                  if echo "$blob" | grep -iqE "$pattern"; then
+                    echo "Shortcut story reference found."
+                    exit 0
+                  fi
+
+                  echo "::error::No Shortcut story reference found in PR title, body, or branch."
+                  echo "Every PR must link a Shortcut story. Add one of:"
+                  echo "  - branch name:  feat/sc-1234-short-description"
+                  echo "  - PR title:     feat(x): ... [sc-1234]"
+                  echo "  - PR body:      the story id (sc-1234) or its shortcut.com URL"
+                  echo "Genuinely story-less PR? Add the '$ALLOW_LABEL' label to waive."
+                  exit 1
