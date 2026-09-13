@@ -71,3 +71,21 @@ fleet; public callers must opt out.
 standalone push/PR/schedule workflows owned by this repo and not called by others.
 
 ---
+
+## D-0004 — Centralised SAST reusable workflow
+
+**Date**: 2026-09-01
+**Status**: accepted
+
+Adds `.github/workflows/sast.yml`, a `workflow_call` reusable workflow that runs
+Python SAST (Bandit) and a filesystem + IaC scan (Trivy: vuln/secret/misconfig).
+It complements the existing `secret-scan.yml` (gitleaks) gate. Consumer repos call
+it from a thin `sast.yml` caller, so the security gate is defined once and versioned
+centrally rather than duplicated per repo.
+
+Follows D-0003: both jobs expose the `runner` input and use
+`runs-on: ${{ inputs.runner || 'chrysa-arc' }}`. Trivy and Bandit run pinned
+(image tag / additional-deps) with configurable fail severities. Part of the
+ecosystem-wide security gate (secret-scan + SAST in pre-commit and CI).
+
+---

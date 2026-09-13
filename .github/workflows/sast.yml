@@ -1,0 +1,76 @@
+---
+name: SAST
+
+on:
+    workflow_call:
+        inputs:
+            python-version:
+                description: Python version used to run bandit.
+                required: false
+                type: string
+                default: "3.11"
+            source-dirs:
+                description: Space-separated source dirs bandit recurses into.
+                required: false
+                type: string
+                default: src
+            bandit-severity:
+                description: Minimum bandit severity that fails (-l/-ll/-lll).
+                required: false
+                type: string
+                default: "-ll"
+            trivy-severity:
+                description: Comma-separated trivy severities that fail the build.
+                required: false
+                type: string
+                default: "HIGH,CRITICAL"
+            runner:
+                description: Runner label (self-hosted default; public repos override).
+                required: false
+                type: string
+                default: chrysa-arc
+
+concurrency:
+  group: sast-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+    bandit:
+        name: Python SAST (Bandit)
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        timeout-minutes: 15
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+              with:
+                  python-version: ${{ inputs.python-version }}
+                  cache: pip
+            - name: Run bandit
+              env:
+                  SOURCE_DIRS: ${{ inputs.source-dirs }}
+                  BANDIT_SEVERITY: ${{ inputs.bandit-severity }}
+              run: |
+                  python -m pip install 'bandit[toml]'
+                  if grep -q '^\[tool.bandit\]' pyproject.toml 2>/dev/null; then
+                      bandit -c pyproject.toml -r $SOURCE_DIRS "$BANDIT_SEVERITY"
+                  else
+                      bandit -r $SOURCE_DIRS "$BANDIT_SEVERITY"
+                  fi
+
+    trivy-fs:
+        name: Filesystem + IaC scan (Trivy)
+        runs-on: ${{ inputs.runner || 'chrysa-arc' }}
+        timeout-minutes: 15
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - name: Run trivy
+              env:
+                  TRIVY_SEVERITY: ${{ inputs.trivy-severity }}
+              run: |
+                  docker run --rm -v "$PWD:/workspace" -w /workspace \
+                      aquasec/trivy:0.58.0 fs --scanners vuln,secret,misconfig \
+                      --exit-code 1 --severity "$TRIVY_SEVERITY" --no-progress .
