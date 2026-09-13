@@ -126,6 +126,7 @@ Composite GitHub Actions and their tested Python entrypoints for the chrysa flee
     pull-request-size.yml
     quality-gate-check.yml
     release.yml
+    sast.yml
     secret-scan.yml
     sonar.yml
     sync-labels.yml
