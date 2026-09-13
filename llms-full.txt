@@ -116,6 +116,7 @@ Composite GitHub Actions and their tested Python entrypoints for the chrysa flee
     deploy.yml
     detect-conflicts.yml
     enforce-feature-branch.yml
+    enforce-shortcut-link.yml
     labeler.yml
     lint-python.yml
     mutation-testing.yml
