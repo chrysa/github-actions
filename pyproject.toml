@@ -28,3 +28,10 @@ testpaths = ["tests"]
 "**/tests/**" = ["PLR2004"]
 "**/test_*.py" = ["PLR2004"]
 "**/conftest.py" = ["PLR2004"]
+
+[tool.guideline-checker]
+# Pre-existing violations snapshot (mostly linter false positives: rule keywords
+# matched inside docstrings/comments, and language-scoped rules applied to the wrong
+# file types). The gate fails only on NEW violations.
+# Regenerate: guideline-checker check --write-baseline .guideline-baseline.json
+baseline = ".guideline-baseline.json"
