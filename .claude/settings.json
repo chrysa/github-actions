@@ -17,6 +17,30 @@
         "matcher": "Bash"
       }
     ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "sh -c 'FILE=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get(\\\"tool_input\\\",{}).get(\\\"file_path\\\",\\\"\\\"))\" 2>/dev/null); case \"$FILE\" in */scripts/*.sh) command -v shellcheck >/dev/null && shellcheck \"$FILE\" ;; esac'",
+            "name": "shellcheck-on-scripts",
+            "timeout": 10000,
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write"
+      },
+      {
+        "hooks": [
+          {
+            "command": "sh -c 'FILE=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get(\\\"tool_input\\\",{}).get(\\\"file_path\\\",\\\"\\\"))\" 2>/dev/null); case \"$FILE\" in */action.yml) command -v actionlint >/dev/null && actionlint \"$FILE\" ;; esac'",
+            "name": "actionlint-on-action-yml",
+            "timeout": 10000,
+            "type": "command"
+          }
+        ],
+        "matcher": "Edit|Write"
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
