@@ -80,6 +80,8 @@ Composite GitHub Actions and their tested Python entrypoints for the chrysa flee
       SKILL.md
     plan/
       SKILL.md
+    rollout-status/
+      SKILL.md
     spec/
       SKILL.md
     standards-authoring/
@@ -91,6 +93,7 @@ Composite GitHub Actions and their tested Python entrypoints for the chrysa flee
     verification-loop/
       SKILL.md
 .editorconfig
+.env.example
 .gitattributes
 .github/
   CODEOWNERS
