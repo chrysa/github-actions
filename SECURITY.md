@@ -43,3 +43,35 @@ or that executes untrusted input, as a vulnerability.
 
 This policy follows the chrysa
 [security standard](https://github.com/chrysa/dev-kit/blob/main/standards/STANDARDS.md).
+
+## Documentation-audit findings (2026-09-25, docs-only pass)
+
+> Recorded by a documentation pass. **No code was changed.** Severities are the
+> auditor's assessment for the repo owner to triage; none are confirmed exploits.
+> No secrets were found hardcoded in `*/action.yml` or `.github/workflows/*`
+> (searched for `ghp_`, `glpat_`, `AKIA`, PEM headers, inline tokens — none).
+
+- **MEDIUM — third-party actions pinned to mutable tags, not commit SHAs.**
+  `SonarSource/sonarqube-scan-action@v5` and `@v4.2.1`,
+  `codecov/codecov-action@v6`, `EnricoMi/publish-unit-test-result-action@v2`,
+  `gittools/actions/gitversion/{setup,execute}@v4.4.2`,
+  `pypa/gh-action-pypi-publish@release/v1`, and `actions/*` are referenced by
+  tag/branch. A moved tag on any of these runs new code in consumer CI. Consider
+  SHA-pinning third-party `uses` (Dependabot can keep SHAs current).
+  *Evidence:* `grep -rhoE "uses: [^ ]+@[^ ]+"` over `*/action.yml` and
+  `.github/workflows/*` excluding 40-hex SHAs.
+
+- **MEDIUM — internal references to `@main`.** At least one workflow uses
+  `chrysa/github-actions/python-setup@main` and `.../install-project@main`,
+  contradicting the SECURITY.md "never `@main`" statement for consumers.
+  Confirm these are intentional (self-CI dogfooding) or pin to a tag.
+
+- **LOW — `workflow_call` workflows without an explicit top-level
+  `permissions:` block** (inherit the repo/caller default token scope):
+  `action-check.yml`, `approved-label.yml`, `auto-assign.yml`,
+  `detect-conflicts.yml`, `labeler.yml`, `pr-dependencies.yml`,
+  `pull-request-size.yml`, `sync-labels.yml`, `update-pr-body.yml`.
+  Add a least-privilege `permissions:` block to each.
+
+These are also tracked in [REVIEW.md](REVIEW.md) and [REQUIREMENTS.md](REQUIREMENTS.md)
+(REQ-TECH-015, REQ-TECH-016).
