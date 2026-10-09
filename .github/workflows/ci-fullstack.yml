@@ -4,7 +4,7 @@
 # rather than hardcoding stack steps: every fullstack repo exposes `install`,
 # `pre-commit`, a test target (`docker-test` by default), and `build`.
 #
-# Quality GATE = `make pre-commit` (the repo's own hook set: ruff/mypy/eslint/tsc/
+# Quality GATE = `pre-commit run --all-files` (the repo's own hook set: ruff/mypy/eslint/tsc/
 # gitleaks/...). Tests via `make <test-target>`. Sonar scans the whole repo.
 # Auto-versioning stays in each repo's release.yml (GitVersion).
 #
@@ -85,9 +85,17 @@ jobs:
             - name: Install toolchain
               run: make install
               shell: bash
+            # Invoke pre-commit directly (standards: "CI invokes pre-commit, not
+            # make"). The previous `make pre-commit` relied on a host
+            # `pre-commit` binary that nothing installed, so the gate failed
+            # with "pre-commit: No such file or directory" in every caller.
+            # Same scope as before: every file, default hook stage.
             - name: Pre-commit gate
-              run: SKIP=no-commit-to-branch make pre-commit
-              shell: bash
+              uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+              with:
+                  extra_args: --all-files
+              env:
+                  SKIP: no-commit-to-branch
 
     test:
         name: Tests (make ${{ inputs.test-target }})
