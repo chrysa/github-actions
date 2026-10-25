@@ -1,6 +1,6 @@
 ---
 name: composite-action-reviewer
-description: 'Use this agent to review a PR or diff touching one or more `*/action.yml` composite actions in this repo. It runs actionlint and shellcheck, checks input/output contract correctness, working-directory propagation, and secret handling, and verifies the change is covered by `tests/test_actions_yaml.py`. Examples: <example>Context: A PR modifies ruff-check/action.yml. user: "review this composite action change" assistant: "I will use the composite-action-reviewer agent to lint it and check the input/output contract" <commentary>Composite action correctness is this agent'"'"'s exact scope.</commentary></example>'
+description: 'Use this agent to review a PR or diff touching one or more `*/action.yml` composite actions in this repo. It runs actionlint and shellcheck, checks input/output contract correctness, working-directory propagation, and secret handling, and verifies the change is covered by `tests/test_actions_yaml.py`. Examples: <example>Context: A PR modifies ruff-check/action.yml. user: "review this composite action change" assistant: "I will use the composite-action-reviewer agent to lint it and check the input/output contract" <commentary>Composite action correctness is this agent''s exact scope.</commentary></example>'
 tools: Read, Grep, Glob, Bash
 ---
 

@@ -1,23 +1,10 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "hooks": {
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "command": "CMD=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',d).get('command',''))\" 2>/dev/null || true); case \"$CMD\" in *grep*|*rg\\ *|*ripgrep*|*find\\ *|*fd\\ *|*ack\\ *|*ag\\ *)   [ -f graphify-out/graph.json ] &&   echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"graphify: knowledge graph at graphify-out/. For focused questions, run `graphify query \\\"<question>\\\"` (scoped subgraph, usually much smaller than GRAPH_REPORT.md) instead of grepping raw files. Read GRAPH_REPORT.md only for broad architecture context.\"}}'   || true ;; esac",
-            "type": "command"
-          },
-          {
-            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/check-no-env-files.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
-            "name": "check-no-env-files",
-            "timeout": 5000,
-            "type": "command"
-          }
-        ],
-        "matcher": "Bash"
-      }
-    ],
     "PostToolUse": [
       {
         "hooks": [
@@ -42,17 +29,34 @@
         "matcher": "Edit|Write"
       },
       {
-        "matcher": "Edit|Write",
         "hooks": [
           {
-            "type": "command",
-            "command": "python3",
             "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/format.py"
             ],
-            "timeout": 30
+            "command": "python3",
+            "timeout": 30,
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "Edit|Write"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "CMD=$(python3 -c \"import json,sys; d=json.load(sys.stdin); print(d.get('tool_input',d).get('command',''))\" 2>/dev/null || true); case \"$CMD\" in *grep*|*rg\\ *|*ripgrep*|*find\\ *|*fd\\ *|*ack\\ *|*ag\\ *)   [ -f graphify-out/graph.json ] &&   echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"graphify: knowledge graph at graphify-out/. For focused questions, run `graphify query \\\"<question>\\\"` (scoped subgraph, usually much smaller than GRAPH_REPORT.md) instead of grepping raw files. Read GRAPH_REPORT.md only for broad architecture context.\"}}'   || true ;; esac",
+            "type": "command"
+          },
+          {
+            "command": "sh -c 'f=\"$CLAUDE_PROJECT_DIR/.claude/hooks/check-no-env-files.cjs\"; [ ! -f \"$f\" ] || node \"$f\"'",
+            "name": "check-no-env-files",
+            "timeout": 5000,
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
       }
     ],
     "UserPromptSubmit": [
@@ -65,10 +69,6 @@
         ]
       }
     ]
-  },
-  "attribution": {
-    "commit": "",
-    "pr": ""
   },
   "permissions": {
     "allow": [
