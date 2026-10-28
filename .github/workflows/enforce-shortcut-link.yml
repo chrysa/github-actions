@@ -11,9 +11,18 @@ on:
                 required: false
                 type: string
                 default: "no-story"
+            accept-github-issue:
+                description: >-
+                    Open-source repos (DEC-V3-006): a linked GitHub issue of this
+                    repository satisfies the check, as an alternative to a Shortcut story.
+                required: false
+                type: boolean
+                default: false
 
 permissions:
     contents: read
+    issues: read
+    pull-requests: read
 
 jobs:
     shortcut-link:
@@ -29,6 +38,9 @@ jobs:
                   BRANCH_NAME: ${{ github.head_ref }}
                   PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
                   ALLOW_LABEL: ${{ inputs.allow-label }}
+                  ACCEPT_ISSUE: ${{ inputs.accept-github-issue }}
+                  GH_TOKEN: ${{ github.token }}
+                  REPO: ${{ github.repository }}
               run: |
                   # Documented escape hatch: label the PR to waive the check.
                   if [[ ",$PR_LABELS," == *",$ALLOW_LABEL,"* ]]; then
@@ -45,8 +57,26 @@ jobs:
                     exit 0
                   fi
 
-                  echo "::error::No Shortcut story reference found in PR title, body, or branch."
-                  echo "Every PR must link a Shortcut story. Add one of:"
+                  if [[ "$ACCEPT_ISSUE" == "true" ]]; then
+                    # Candidates: "#123", "closes #123", ".../issues/123", branch "issue-123".
+                    nums=$(printf '%s\n' "$blob" | grep -oiE "(#|/issues/|issue-)[0-9]+" | grep -oE "[0-9]+" | sort -un | head -n 20 || true)
+                    for n in $nums; do
+                      # Must be an issue (not a PR) of this repository.
+                      if gh api "repos/$REPO/issues/$n" --jq '(.number != null) and (.pull_request == null)' 2>/dev/null | grep -qx true; then
+                        echo "Linked GitHub issue #$n found."
+                        exit 0
+                      fi
+                    done
+                  fi
+
+                  if [[ "$ACCEPT_ISSUE" == "true" ]]; then
+                    echo "::error::No Shortcut story or GitHub issue reference found in PR title, body, or branch."
+                    echo "Every PR must link a Shortcut story or a GitHub issue of this repository. Add one of:"
+                    echo "  - PR body:      closes #123 (an issue of this repository, not a PR)"
+                  else
+                    echo "::error::No Shortcut story reference found in PR title, body, or branch."
+                    echo "Every PR must link a Shortcut story. Add one of:"
+                  fi
                   echo "  - branch name:  feat/sc-1234-short-description"
                   echo "  - PR title:     feat(x): ... [sc-1234]"
                   echo "  - PR body:      the story id (sc-1234) or its shortcut.com URL"
