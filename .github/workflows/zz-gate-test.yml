@@ -1,0 +1,16 @@
+---
+# Temporary: checks the reusable workflow from this branch with callers that grant no
+# permissions (restricted default token). Never merged.
+name: Gate permission test
+
+"on":
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  oss:
+    uses: ./.github/workflows/enforce-shortcut-link.yml
+    with:
+      accept-github-issue: true
+  private:
+    uses: ./.github/workflows/enforce-shortcut-link.yml
