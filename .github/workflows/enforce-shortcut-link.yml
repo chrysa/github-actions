@@ -19,10 +19,11 @@ on:
                 type: boolean
                 default: false
 
+# contents: read only. Asking for more here makes every caller that does not grant it
+# fail at startup (a reusable workflow cannot exceed its caller's token). The issue lookup
+# below reads public data of the caller's repository, which this token can read as is.
 permissions:
     contents: read
-    issues: read
-    pull-requests: read
 
 jobs:
     shortcut-link:
