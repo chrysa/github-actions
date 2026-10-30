@@ -170,5 +170,7 @@
       "Read(**/*.map)",
       "Read(!.env.example)"
     ]
-  }
+  },
+  "model": "haiku",
+  "effortLevel": "low"
 }
