@@ -364,3 +364,21 @@ in `chrysa-skills` and `claude-config`.
     gist-id: ${{ secrets.CHRYSA_SETUP_GIST_ID }}
     bump: ${{ github.event.inputs.bump }}
 ```
+
+## Scheduled workflows of this repository
+
+### CI failure alerts
+
+`.github/workflows/ci-failure-alerts.yml` runs every 30 minutes. It lists the failed
+workflow runs on `main` and `develop` of the non-archived `chrysa/*` repositories
+(pull requests and Dependabot runs excluded) and posts each one once to the Discord
+alert channel: repository, workflow, branch, link to the run. The job log only prints
+a count, because the log of this public repository is public.
+
+| Secret | Required | Purpose |
+|---|---|---|
+| `DISCORD_WEBHOOK_ALERTES_CI` | yes | Webhook URL of the Discord alert channel. Without it the job posts nothing and succeeds. |
+| `CI_ALERTS_READ_TOKEN` | no | Fine-grained token, read-only `Actions` + `Metadata` on all `chrysa` repositories. Without it only public repositories are watched. |
+
+Already reported run ids are kept for 7 days in the Actions cache. Disable with
+`gh workflow disable ci-failure-alerts.yml -R chrysa/github-actions`.

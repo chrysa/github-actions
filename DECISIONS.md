@@ -89,3 +89,25 @@ Follows D-0003: both jobs expose the `runner` input and use
 ecosystem-wide security gate (secret-scan + SAST in pre-commit and CI).
 
 ---
+
+## D-0005 — Scheduled CI failure alerts to Discord
+
+**Date**: 2026-11-02
+**Status**: proposed
+
+Adds `.github/workflows/ci-failure-alerts.yml`, a scheduled workflow (every 30 minutes,
+not reusable) that posts failed runs on `main` and `develop` of the non-archived
+`chrysa/*` repositories to one Discord alert channel, each run once (ids kept 7 days
+in the Actions cache). Pull request and Dependabot runs are excluded.
+
+Chosen over an `if: failure()` step in the shared reusable workflows, which would need
+the webhook secret in every repository (personal account: no shared secret), and over
+GitHub e-mail notifications (no Discord). Discord's GitHub-compatible webhook is not
+used: support for `workflow_run` events is not confirmed.
+
+Secrets live only in this repository: `DISCORD_WEBHOOK_ALERTES_CI` (required) and
+`CI_ALERTS_READ_TOKEN` (optional read-only token; without it only public repositories
+are visible to `GITHUB_TOKEN`). Because this repository is public, the job log prints a
+count only, never a repository name. Runs on `ubuntu-latest` (public repository, D-0003).
+
+---
