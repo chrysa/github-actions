@@ -11,22 +11,20 @@ Composite GitHub Actions and their tested Python entrypoints for the chrysa flee
   agents/
     code-reviewer.md
     composite-action-reviewer.md
-    general-backend-developer.md
-    general-code-quality-debugger.md
-    general-devops.md
-    general-frontend-developer.md
-    general-fullstack-developer.md
-    general-pm.md
-    general-qa.md
-    general-solution-architect.md
-    general-technical-project-lead.md
-    general-technical-writer.md
     security-auditor.md
     test-runner.md
   ape/
     README.md
     ape-transform-v2.md
     ape_hook.py
+  commands/
+    adr-new.md
+    commit.md
+    custom-init.md
+    help-commands.md
+    issue.md
+    reviewpr.md
+    test.md
   hooks/
     check-no-env-files.cjs
     claude-config-drift.cjs
