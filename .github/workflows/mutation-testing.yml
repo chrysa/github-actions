@@ -1,11 +1,20 @@
 ---
 name: Mutation Testing
 
+# Reusable mutation-testing workflow, written for mutmut 3.
+# mutmut 3 dropped the --paths-to-mutate / --runner options: it reads its
+# settings from [tool.mutmut] in pyproject.toml or [mutmut] in setup.cfg and
+# runs pytest itself. When the repository has no mutmut section, this workflow
+# writes one into setup.cfg from the inputs below (never committed).
+#
+# Score = caught / (caught + survived + no_tests), where caught counts the
+# killed, timed-out and segfaulted mutants reported by `mutmut export-cicd-stats`.
+
 on:
   workflow_call:
     inputs:
       paths:
-        description: "Comma-separated paths to mutate"
+        description: "Comma-separated paths to mutate (ignored when the repo already configures mutmut)"
         required: false
         default: "code"
         type: string
@@ -14,12 +23,32 @@ on:
         required: false
         default: "70"
         type: string
+      python-version:
+        description: "Python version used to install the project and run mutmut"
+        required: false
+        default: "3.14"
+        type: string
+      working-directory:
+        description: "Directory that holds pyproject.toml (e.g. backend)"
+        required: false
+        default: "."
+        type: string
+      test-paths:
+        description: "Comma-separated pytest paths for the mutant runs (empty: pytest's own discovery)"
+        required: false
+        default: ""
+        type: string
+      install-command:
+        description: "Command that installs the project and its test dependencies"
+        required: false
+        default: 'pip install -e ".[dev]"'
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: mutation-testing-${{ github.ref }}
+  group: reusable-mutation-testing-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -27,47 +56,82 @@ jobs:
     name: Mutmut
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14"
+          python-version: ${{ inputs.python-version }}
 
       - name: Install dependencies
+        env:
+          INSTALL_COMMAND: ${{ inputs.install-command }}
         run: |
           python -m pip install --only-binary :all: --upgrade pip
-          pip install -e ".[dev]" mutmut
+          eval "${INSTALL_COMMAND}"
+          python -m pip install --only-binary :all: "mutmut==3.8.1"
 
-      - name: Run mutmut
-        id: mutmut
+      - name: Configure mutmut
         env:
           MUTMUT_PATHS: ${{ inputs.paths }}
+          MUTMUT_TEST_PATHS: ${{ inputs.test-paths }}
         run: |
-          mutmut run \
-            --paths-to-mutate "${MUTMUT_PATHS}" \
-            --runner "python -m pytest tests/ -x -q --no-header" \
-            --no-progress \
-            || true
+          if grep -qE '^\[tool\.mutmut\]' pyproject.toml 2>/dev/null \
+            || grep -qE '^\[mutmut\]' setup.cfg 2>/dev/null; then
+            echo "Using the repository's own mutmut configuration."
+            exit 0
+          fi
+          {
+            echo ""
+            echo "[mutmut]"
+            echo "source_paths="
+            tr ',' '\n' <<< "${MUTMUT_PATHS}" | sed -e 's/^ *//' -e 's/ *$//' -e '/^$/d' -e 's/^/    /'
+            if [ -n "${MUTMUT_TEST_PATHS}" ]; then
+              echo "pytest_add_cli_args_test_selection="
+              tr ',' '\n' <<< "${MUTMUT_TEST_PATHS}" | sed -e 's/^ *//' -e 's/ *$//' -e '/^$/d' -e 's/^/    /'
+            fi
+          } >> setup.cfg
+          echo "Generated mutmut configuration:"
+          sed -n '/^\[mutmut\]/,$p' setup.cfg
+
+      - name: Run mutmut
+        run: |
+          # mutmut 3 exits 0 when mutants survive; a non-zero exit means the
+          # run itself broke (failing test suite, bad configuration).
+          rc=0
+          mutmut run || rc=$?
+          mutmut export-cicd-stats || true
+          if [ "${rc}" -ne 0 ]; then
+            echo "::error::mutmut run failed with exit code ${rc}; see the log above"
+            exit "${rc}"
+          fi
+          test -s mutants/mutmut-cicd-stats.json || {
+            echo "::error::mutmut produced no statistics; see the log above"
+            exit 1
+          }
 
       - name: Compute mutation score
         id: score
         run: |
-          KILLED=$(mutmut results 2>/dev/null | grep -c "^Killed" || echo 0)
-          SURVIVED=$(mutmut results 2>/dev/null | grep -c "^Survived" || echo 0)
-          TOTAL=$((KILLED + SURVIVED))
-          if [ "$TOTAL" -eq 0 ]; then
-            echo "score=100" >> "$GITHUB_OUTPUT"
-          else
-            SCORE=$(( KILLED * 100 / TOTAL ))
-            echo "score=$SCORE" >> "$GITHUB_OUTPUT"
-          fi
-          {
-            echo "killed=$KILLED"
-            echo "survived=$SURVIVED"
-            echo "total=$TOTAL"
-          } >> "$GITHUB_OUTPUT"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          s = json.load(open("mutants/mutmut-cicd-stats.json"))
+          caught = s.get("killed", 0) + s.get("timeout", 0) + s.get("segfault", 0)
+          missed = s.get("survived", 0) + s.get("no_tests", 0)
+          total = caught + missed
+          score = 0 if total == 0 else caught * 100 // total
+          print(f"score={score}")
+          print(f"killed={caught}")
+          print(f"survived={missed}")
+          print(f"total={total}")
+          PY
+          cat "$GITHUB_OUTPUT"
 
       - name: Show surviving mutants
         if: always()
@@ -77,18 +141,29 @@ jobs:
         env:
           THRESHOLD: ${{ inputs.threshold }}
           SCORE: ${{ steps.score.outputs.score }}
+          TOTAL: ${{ steps.score.outputs.total }}
         run: |
+          if [ "${TOTAL}" = "0" ]; then
+            echo "::error::mutmut generated no mutant; check the paths input"
+            exit 1
+          fi
           echo "Mutation score: ${SCORE}% (threshold: ${THRESHOLD}%)"
-          if [ "$SCORE" -lt "$THRESHOLD" ]; then
+          {
+            echo "### Mutation testing"
+            echo ""
+            echo "Score: ${SCORE}% (threshold: ${THRESHOLD}%), mutants: ${TOTAL}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${SCORE}" -lt "${THRESHOLD}" ]; then
             echo "❌ Mutation score ${SCORE}% is below threshold ${THRESHOLD}%"
             exit 1
           fi
           echo "✅ Mutation score ${SCORE}% meets threshold ${THRESHOLD}%"
 
-      - name: Upload mutmut results
+      - name: Upload mutmut statistics
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: mutmut-results
-          path: .mutmut-cache
+          path: ${{ inputs.working-directory }}/mutants/mutmut-cicd-stats.json
+          if-no-files-found: ignore
           retention-days: 7
