@@ -31,7 +31,7 @@ on:
                 default: chrysa-arc
 
 concurrency:
-  group: sast-${{ github.ref }}
+  group: reusable-sast-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

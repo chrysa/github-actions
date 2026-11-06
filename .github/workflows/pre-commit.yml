@@ -8,7 +8,7 @@ permissions:
     contents: read
 
 concurrency:
-  group: pre-commit-${{ github.ref }}
+  group: reusable-pre-commit-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
