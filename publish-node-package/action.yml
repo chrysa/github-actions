@@ -1,7 +1,9 @@
-description: Build and publish a scoped npm package to GitHub Packages (the private GHCR npm registry)
+description: Build and publish a scoped npm package to GitHub Packages (the private
+  GHCR npm registry)
 inputs:
   node-auth-token:
-    description: Token with packages:write scope — pass the workflow GITHUB_TOKEN, never a plaintext PAT
+    description: "Token with packages:write scope \u2014 pass the workflow GITHUB_TOKEN,\
+      \ never a plaintext PAT"
     required: true
   node-version:
     default: '22'
@@ -18,7 +20,7 @@ name: Publish Node package
 runs:
   steps:
   - name: Set up Node.js
-    uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+    uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
     with:
       node-version: ${{ inputs.node-version }}
       registry-url: https://npm.pkg.github.com
@@ -31,24 +33,14 @@ runs:
     run: npm run build --if-present
     shell: bash
     working-directory: ${{ inputs.package-dir }}
-  - name: Publish to GitHub Packages (idempotent)
-    # publishConfig.registry in the package's package.json selects the GHCR npm
-    # registry; setup-node writes the matching .npmrc with the auth token env var.
-    # Package versions are set by hand in package.json (decoupled from the repo's
-    # GitVersion tag), so a release re-run would otherwise 409 on an unchanged
-    # version. Skip when this name@version is already published — publish only the
-    # genuinely new ones, making the step safe to run on every release.
-    env:
+  - env:
       NODE_AUTH_TOKEN: ${{ inputs.node-auth-token }}
-    run: |
-      name=$(node -p "require('./package.json').name")
-      version=$(node -p "require('./package.json').version")
-      if npm view "${name}@${version}" version >/dev/null 2>&1; then
-        echo "${name}@${version} is already published — skipping."
-      else
-        echo "Publishing ${name}@${version}…"
-        npm publish
-      fi
+    name: Publish to GitHub Packages (idempotent)
+    run: "name=$(node -p \"require('./package.json').name\")\nversion=$(node -p \"\
+      require('./package.json').version\")\nif npm view \"${name}@${version}\" version\
+      \ >/dev/null 2>&1; then\n  echo \"${name}@${version} is already published \u2014\
+      \ skipping.\"\nelse\n  echo \"Publishing ${name}@${version}\u2026\"\n  npm publish\n\
+      fi\n"
     shell: bash
     working-directory: ${{ inputs.package-dir }}
   using: composite
