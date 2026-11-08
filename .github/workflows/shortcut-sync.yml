@@ -29,6 +29,9 @@ jobs:
         name: Sync GitHub and SonarCloud into Shortcut
         runs-on: ubuntu-latest
         timeout-minutes: 30
+        # The two secrets live in this environment, restricted to the default branch, so a run
+        # dispatched from another branch cannot read the cross-repository token.
+        environment: shortcut-sync
         permissions:
             contents: read
         steps:

@@ -42,8 +42,8 @@ and reports planned counts; workflow states come from `GET /workflows`, never ha
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `SHORTCUT_API_TOKEN` | — | Shortcut API token (secret). Missing → the run is skipped. |
-| `SYNC_GITHUB_TOKEN` | — | Fine-grained PAT, issues read/write on chrysa repos (secret). |
+| `SHORTCUT_API_TOKEN` | — | Shortcut API token (secret of the `shortcut-sync` environment). Missing → the run is skipped. |
+| `SYNC_GITHUB_TOKEN` | — | Fine-grained PAT, issues read/write on chrysa repos (secret of the `shortcut-sync` environment). |
 | `SYNC_DRY_RUN` | `true` | `false` applies the writes. |
 | `SYNC_MAX_CREATIONS` | `25` | Story creations allowed per run. |
 | `SHORTCUT_WORKFLOW_ID` | — | Needed only if the workspace has several workflows. |
