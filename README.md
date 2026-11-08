@@ -31,6 +31,7 @@ Shared composite GitHub Actions for `chrysa/*` repositories.
 | `chrysa/github-actions/lint-helm@v1` | `helm lint --strict` per chart |
 | `chrysa/github-actions/validate-terraform@v1` | terraform init/validate/fmt (never applies) |
 | `chrysa/github-actions/check-branch-policy@v1` | Enforce the chrysa branch model on a PR |
+| `chrysa/github-actions/check-commit-hygiene@v1` | Flag assistant attribution and foreign identities in PR commits |
 | `chrysa/github-actions/gist-publish@v1` | Version, changelog and publish the multi-machine setup gist |
 | `chrysa/github-actions/changelog@v1` | Generate the release changelog with git-cliff for a computed version |
 | `chrysa/github-actions/doc-drift@v1` | Regenerate code-derived docs and fail if they drift from the committed copy |
@@ -349,6 +350,27 @@ Enforce the branch model on a pull request: `develop -> main` is the release pro
 
 ```yaml
 - uses: chrysa/github-actions/check-branch-policy@v1
+```
+
+### check-commit-hygiene
+
+Flag assistant attribution (`Co-authored-by` an assistant, `Generated with …`, a session link)
+and, when `allowed-email-pattern` is set, author / committer / co-author emails outside the
+allowed set, in the commits of a pull request. GitHub copies the squashed commits' co-authors
+into every squash-merge commit whatever the squash-message setting, so the branch must be clean
+before merge (shared-standards `SCM.md` SC-016). Info-first: `mode: info` (default) annotates and
+passes, `mode: error` fails. Findings never print an email address. The commit list comes from
+`pulls/{n}/commits`, which GitHub caps at 250 commits.
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: read
+steps:
+  - uses: chrysa/github-actions/check-commit-hygiene@v1
+    with:
+      allowed-email-pattern: '^chrysa@users\.noreply\.github\.com$|^noreply@github\.com$|\[bot\]@users\.noreply\.github\.com$'
+      # mode: error   # once the fleet is clean (GV-020)
 ```
 
 ### gist-publish
