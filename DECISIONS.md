@@ -89,3 +89,33 @@ Follows D-0003: both jobs expose the `runner` input and use
 ecosystem-wide security gate (secret-scan + SAST in pre-commit and CI).
 
 ---
+
+## D-0005 — Central daily Shortcut sync hosted here
+
+**Date**: 2026-11-08
+**Status**: accepted (owner decision DEC-V14-125, Shortcut sc-5933)
+
+Shortcut is the source of truth for work, GitHub for code, Sentry for errors (it opens
+GitHub issues natively), SonarCloud for quality. One central scheduled job,
+`.github/workflows/shortcut-sync.yml` running `python3 -m shortcut_sync`, mirrors them
+into Shortcut every day: open GitHub issues become stories in the epic whose
+`external_id` is `chrysa/<repo>`, closed issues move their story to done, and the
+SonarCloud quality gate drives the epic health plus one tracking story.
+
+**Why here:** this repository is public, so its Actions minutes are not billed (private
+repos' Actions currently fail on billing). It is a standalone `schedule` /
+`workflow_dispatch` workflow, not a `workflow_call`, so D-0003's self-hosted default does
+not apply: it runs on `ubuntu-latest`.
+
+**Constraints that follow from a public repository:** logs and the step summary carry
+counts and numeric ids only (no issue title, story name or repository name — some mapped
+repositories are private); error messages never contain a URL or a token; tokens never
+follow a redirect to another host. The job reads two secrets, `SHORTCUT_API_TOKEN` and
+`SYNC_GITHUB_TOKEN` (fine-grained PAT, issues read/write), and requests no
+`GITHUB_TOKEN` permission beyond `contents: read`.
+
+**Safety rails:** never adds labels to stories; at most 25 creations per run
+(configurable); manual runs default to dry run (read only, planned counts); workflow
+states are resolved from `GET /workflows`, never hardcoded.
+
+---

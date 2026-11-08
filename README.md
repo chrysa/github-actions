@@ -313,8 +313,24 @@ Sync an issue or pull-request event to the project's Notion roadmap table row.
 
 ## Python entrypoints
 
-Action logic that outgrows a one-line `run:` lives in `notion_sync/` and is unit-tested
-(`tests/`, run by `make test`) — workflows stay glue, per the fleet GitHub Actions standard.
+Action logic that outgrows a one-line `run:` lives in `notion_sync/` and `shortcut_sync/` and
+is unit-tested (`tests/`, run by `make test`) — workflows stay glue, per the fleet GitHub
+Actions standard.
+
+### Shortcut sync (scheduled workflow, not an action)
+
+`.github/workflows/shortcut-sync.yml` runs `python3 -m shortcut_sync` every day at 05:17 UTC
+and on demand. For every repository mapped to a Shortcut epic (`external_id` =
+`chrysa/<repo>`) it imports open GitHub issues as stories (and comments the story link on
+the issue), moves those stories to done when the issue closes, and turns the SonarCloud
+quality gate into the epic health. Details, safety limits and variables:
+[`shortcut_sync/README.md`](shortcut_sync/README.md).
+
+- Secrets: `SHORTCUT_API_TOKEN`, `SYNC_GITHUB_TOKEN` (fine-grained PAT, issues read/write on
+  the chrysa repositories). Without them the run is skipped with a warning.
+- Scheduled runs apply; a manual run (`workflow_dispatch`) defaults to **dry run**, which only
+  reads and reports the planned actions as counts.
+- Logs show counts and numeric ids only — this repository is public.
 
 ### lint-yaml / lint-bash / lint-docker / lint-helm / validate-terraform
 
