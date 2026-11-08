@@ -1,0 +1,45 @@
+description: Flag assistant attribution and identities outside the allowed set in the commits
+  of a pull request (shared-standards SCM.md SC-016); info-first, fails only in error mode
+inputs:
+  allowed-email-pattern:
+    default: ''
+    description: Regex every author, committer and co-author email must match; empty
+      disables the identity check
+    required: false
+  assistant-pattern:
+    default: ''
+    description: Regex naming assistants in trailers; empty uses the built-in default
+    required: false
+  mode:
+    default: info
+    description: info (annotate, never fail) or error (fail on any finding)
+    required: false
+  pr-number:
+    default: ${{ github.event.pull_request.number }}
+    description: Pull request to check
+    required: false
+  token:
+    default: ${{ github.token }}
+    description: Token with read access to the repository's pull requests
+    required: false
+name: Check commit hygiene
+runs:
+  steps:
+  - env:
+      COMMITS_FILE: ${{ runner.temp }}/pr-commits.jsonl
+      GH_TOKEN: ${{ inputs.token }}
+      PR_NUMBER: ${{ inputs.pr-number }}
+      REPO: ${{ github.repository }}
+    name: List the pull request commits
+    run: gh api --paginate "repos/${REPO}/pulls/${PR_NUMBER}/commits?per_page=100" --jq '.[]' > "${COMMITS_FILE}"
+    shell: bash
+  - env:
+      ALLOWED_EMAIL_PATTERN: ${{ inputs.allowed-email-pattern }}
+      ASSISTANT_PATTERN: ${{ inputs.assistant-pattern }}
+      COMMITS_FILE: ${{ runner.temp }}/pr-commits.jsonl
+      MODE: ${{ inputs.mode }}
+      PYTHONPATH: ${{ github.action_path }}/..
+    name: Check commit hygiene
+    run: python3 -m commit_hygiene.check
+    shell: bash
+  using: composite
