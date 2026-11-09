@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from http import HTTPStatus
 from typing import Final, cast
 
 from shortcut_sync.errors import ApiError
@@ -55,16 +54,6 @@ class ShortcutClient:
             raise ApiError(service=SHORTCUT_SERVICE, method="GET", reason="empty epic workflow")
         return cast(ShortcutEpicWorkflow, workflow)
 
-    def get_epic_health(self, epic_id: int) -> str | None:
-        """Current health status of an epic, or None when it has none."""
-        health = self._http.request_object(
-            method="GET",
-            path=f"epics/{epic_id}/health",
-            absent_statuses=(HTTPStatus.NOT_FOUND,),
-        )
-        status = health.get("status") if health else None
-        return status if isinstance(status, str) else None
-
     def list_epic_stories(self, epic_id: int) -> list[ShortcutStory]:
         """Every story of an epic (slim payload, no description)."""
         path = with_query(path=f"epics/{epic_id}/stories", query=WITHOUT_DESCRIPTION)
@@ -98,11 +87,3 @@ class ShortcutClient:
     def update_objective(self, *, objective_id: int, changes: Mapping[str, object]) -> None:
         """``PUT /objectives/{id}`` with the given fields only."""
         self._http.request_object(method="PUT", path=f"objectives/{objective_id}", body=dict(changes))
-
-    def set_epic_health(self, *, epic_id: int, status: str, text: str) -> None:
-        """``POST /epics/{id}/health`` — a new health record (status + short text)."""
-        self._http.request_object(
-            method="POST",
-            path=f"epics/{epic_id}/health",
-            body={"status": status, "text": text},
-        )

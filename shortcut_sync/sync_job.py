@@ -1,4 +1,4 @@
-"""One run: read Shortcut and GitHub, close, rate, scan and import repo by repo, then sync progress."""
+"""One run: read Shortcut and GitHub, close and import repo by repo, then sync epic progress."""
 
 from __future__ import annotations
 
@@ -9,10 +9,8 @@ from typing import Final
 from shortcut_sync.closed_issue_resolver import ClosedIssueResolver
 from shortcut_sync.epic_progress_sync import EpicProgressSync
 from shortcut_sync.errors import ShortcutSyncError
-from shortcut_sync.guardrails_sync import GuardRailsSync
 from shortcut_sync.issue_importer import IssueImporter
 from shortcut_sync.payloads import GitHubRepository, ShortcutStory
-from shortcut_sync.quality_gate_sync import QualityGateSync
 from shortcut_sync.references import linked_issue_keys
 from shortcut_sync.repo_mapping import RepoMapping
 from shortcut_sync.repo_snapshot import RepoSnapshot
@@ -35,15 +33,15 @@ logger = logging.getLogger(__name__)
 
 class ShortcutSyncJob:
     """Shortcut read failures abort the run (an incomplete link index could duplicate stories);
-    GitHub, SonarCloud and write failures are contained per repository, progress failures per
-    epic or objective, and counted."""
+    GitHub and write failures are contained per repository, progress failures per epic or
+    objective, and counted."""
 
     def __init__(self, *, context: SyncContext) -> None:
         self._context = context
 
     def run(self) -> SyncReport:
-        """Execute the repository steps (closing, quality and GuardRails first, so the creation
-        cap favours them), then the epic and objective progress over the whole workspace."""
+        """Execute the repository steps (closing first, then importing), then the epic and
+        objective progress over the whole workspace."""
         shortcut = self._context.shortcut
         states = WorkflowStates.from_workflows(
             workflows=shortcut.list_workflows(),
@@ -64,8 +62,6 @@ class ShortcutSyncJob:
             ClosedIssueResolver(
                 context=self._context, states=states, writer=writer, snapshots=snapshots
             ).sync_repo,
-            QualityGateSync(context=self._context, states=states, writer=writer).sync_repo,
-            GuardRailsSync(context=self._context, states=states, writer=writer).sync_repo,
             IssueImporter(context=self._context, states=states, writer=writer, linked=linked).sync_repo,
         )
         for step in steps:
@@ -99,13 +95,7 @@ class ShortcutSyncJob:
             logger.warning(f"::warning::epic {mapping.primary_epic_id}: repository not read ({error})")
             return None
         report.add(SyncCounter.ISSUES_OPEN, amount=len(issues))
-        default_branch = repository.get("default_branch") if repository is not None else None
-        return RepoSnapshot(
-            mapping=mapping,
-            stories=stories,
-            open_issues=issues,
-            default_branch=default_branch if isinstance(default_branch, str) else "",
-        )
+        return RepoSnapshot(mapping=mapping, stories=stories, open_issues=issues)
 
     def _load_stories(self, mapping: RepoMapping) -> tuple[ShortcutStory, ...]:
         return tuple(

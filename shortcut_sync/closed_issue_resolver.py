@@ -1,4 +1,4 @@
-"""Step 2 — a story created by the sync moves to done once its GitHub issue is closed."""
+"""Step 1 — a story created by the sync moves to done once its GitHub issue is closed."""
 
 from __future__ import annotations
 

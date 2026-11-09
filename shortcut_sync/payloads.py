@@ -26,20 +26,6 @@ class GitHubIssue(TypedDict, total=False):
 class GitHubRepository(TypedDict, total=False):
     archived: bool
     has_issues: bool
-    default_branch: str
-
-
-class GitHubApp(TypedDict, total=False):
-    slug: str
-
-
-class GitHubCheckRun(TypedDict, total=False):
-    id: int
-    name: str
-    status: str
-    conclusion: str | None
-    html_url: str
-    app: GitHubApp
 
 
 class ShortcutEpicStats(TypedDict, total=False):
@@ -51,9 +37,6 @@ class ShortcutEpic(TypedDict, total=False):
     archived: bool
     external_id: str | None
     epic_state_id: int
-    started_at: str | None
-    started_at_override: str | None
-    completed_at_override: str | None
     objective_ids: list[int]
     stats: ShortcutEpicStats
 
@@ -73,7 +56,6 @@ class ShortcutObjective(TypedDict, total=False):
     id: int
     archived: bool
     state: str
-    started_at_override: str | None
 
 
 class ShortcutStory(TypedDict, total=False):
@@ -85,9 +67,6 @@ class ShortcutStory(TypedDict, total=False):
     workflow_id: int
     workflow_state_id: int
     started_at: str | None
-    started_at_override: str | None
-    completed_at: str | None
-    completed_at_override: str | None
 
 
 class ShortcutWorkflowState(TypedDict, total=False):

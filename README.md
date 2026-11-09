@@ -322,9 +322,10 @@ Actions standard.
 `.github/workflows/shortcut-sync.yml` runs `python3 -m shortcut_sync` every day at 05:17 UTC
 and on demand. For every repository mapped to a Shortcut epic (`external_id` =
 `chrysa/<repo>`) it imports open GitHub issues as stories (and comments the story link on
-the issue), moves those stories to done when the issue closes, and turns the SonarCloud
-quality gate into the epic health. Details, safety limits and variables:
-[`shortcut_sync/README.md`](shortcut_sync/README.md).
+the issue) and moves those stories to done when the issue closes; then epic and objective
+states follow their stories. It only covers what no native integration does (pull-request
+story moves, SonarCloud and GuardRails gates stay native). Details, native pieces, safety
+limits and variables: [`shortcut_sync/README.md`](shortcut_sync/README.md).
 
 - Secrets: `SHORTCUT_API_TOKEN`, `SYNC_GITHUB_TOKEN` (fine-grained PAT, issues read/write on
   the chrysa repositories). Without them the run is skipped with a warning.
