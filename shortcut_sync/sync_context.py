@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from shortcut_sync.github_client import GitHubClient
 from shortcut_sync.shortcut_client import ShortcutClient
-from shortcut_sync.sonar_client import SonarClient
 from shortcut_sync.sync_config import SyncConfig
 from shortcut_sync.sync_report import SyncReport
 
@@ -16,7 +15,6 @@ class SyncContext:
     config: SyncConfig
     shortcut: ShortcutClient
     github: GitHubClient
-    sonar: SonarClient
     report: SyncReport
 
     @classmethod
@@ -30,7 +28,6 @@ class SyncContext:
                 base_url=config.github_api_url,
                 owner=config.github_owner,
             ),
-            sonar=SonarClient.anonymous(base_url=config.sonar_url),
             report=SyncReport(
                 dry_run=config.dry_run,
                 max_creations=config.max_creations,

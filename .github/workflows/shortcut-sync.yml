@@ -1,7 +1,8 @@
 ---
-# Daily Shortcut sync (DEC-V14-125): GitHub issues -> Shortcut stories, closed issues -> done,
-# SonarCloud quality gate -> epic health, GuardRails scan of the default branch -> bug story,
-# then epic and objective states/dates follow their stories. Logic and tests live in shortcut_sync/.
+# Daily Shortcut sync (DEC-V14-125, native-first scope sc-6014): GitHub issues -> Shortcut
+# stories, closed issues -> done, then epic and objective states follow their stories (states
+# only: Shortcut stamps the dates). SonarCloud and GuardRails stay native (required checks and
+# their own notifications). Logic and tests live in shortcut_sync/.
 # This repository is public: the job logs only counts and numeric ids.
 name: Shortcut sync
 
@@ -31,7 +32,7 @@ concurrency:
 
 jobs:
     sync:
-        name: Sync GitHub and SonarCloud into Shortcut
+        name: Sync GitHub issues into Shortcut
         runs-on: ubuntu-latest
         timeout-minutes: 30
         # The two secrets live in this environment, restricted to the default branch, so a run

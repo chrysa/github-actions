@@ -1,7 +1,8 @@
-"""Step 5 — epic state and dates follow the stories, then objectives follow the epics (sc-5963).
+"""Step 3 — epic states follow the stories, then objectives follow the epics (sc-5963, sc-6014).
 
 Runs after the repository steps, over every non-archived epic of the workspace (mapped or
 not) that holds at least one story. Stories are read again so this run's writes count.
+Only states are written: Shortcut stamps the native start and completion dates itself.
 """
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ def _may_hold_stories(epic: ShortcutEpic) -> bool:
 
 
 class EpicProgressSync:
-    """Epic failures are contained per epic and counted; dates set by hand are never overwritten."""
+    """Epic failures are contained per epic and counted; no date field is ever written."""
 
     def __init__(
         self, *, context: SyncContext, states: WorkflowStates, epics: Sequence[ShortcutEpic]
@@ -44,37 +45,33 @@ class EpicProgressSync:
     def run(self) -> None:
         """Sync every candidate epic, then the objectives of the epics that started."""
         epic_states = EpicWorkflowStates.from_workflow(self._context.shortcut.get_epic_workflow())
-        starts: dict[int, str | None] = {}
+        started: set[int] = set()
         for epic in self._epics:
             if _may_hold_stories(epic):
-                self._sync_contained(epic=epic, epic_states=epic_states, starts=starts)
+                self._sync_contained(epic=epic, epic_states=epic_states, started=started)
         objectives = ObjectiveProgressSync(context=self._context, writer=self._writer)
-        objectives.run(epics=self._epics, starts=starts)
+        objectives.run(epics=self._epics, started=started)
 
     def _sync_contained(
-        self, *, epic: ShortcutEpic, epic_states: EpicWorkflowStates, starts: dict[int, str | None]
+        self, *, epic: ShortcutEpic, epic_states: EpicWorkflowStates, started: set[int]
     ) -> None:
         try:
-            self._sync_epic(epic=epic, epic_states=epic_states, starts=starts)
+            self._sync_epic(epic=epic, epic_states=epic_states, started=started)
         except ShortcutSyncError as error:
             self._context.report.add(SyncCounter.PROGRESS_STEP_FAILURES)
             logger.warning(f"::warning::epic {epic.get('id')}: progress not synced ({error})")
 
-    def _sync_epic(
-        self, *, epic: ShortcutEpic, epic_states: EpicWorkflowStates, starts: dict[int, str | None]
-    ) -> None:
+    def _sync_epic(self, *, epic: ShortcutEpic, epic_states: EpicWorkflowStates, started: set[int]) -> None:
         epic_id = int(epic["id"])
         timeline = EpicTimeline.from_stories(
             stories=self._context.shortcut.list_epic_stories(epic_id), states=self._states
         )
         if not timeline.story_count:
             return
-        report = self._context.report
-        report.add(SyncCounter.EPICS_CHECKED)
+        self._context.report.add(SyncCounter.EPICS_CHECKED)
         plan = EpicProgressPlan.for_epic(epic=epic, timeline=timeline, epic_states=epic_states)
-        report.add(SyncCounter.MANUAL_DATES_KEPT, amount=plan.manual_dates_kept)
-        written = not plan.changes or self._writer.update_epic(
+        written = plan.counter is None or self._writer.update_epic(
             epic_id=epic_id, changes=plan.changes, counter=plan.counter
         )
         if plan.started and written:
-            starts[epic_id] = plan.start
+            started.add(epic_id)

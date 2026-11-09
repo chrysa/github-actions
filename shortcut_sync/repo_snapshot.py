@@ -14,7 +14,6 @@ class RepoSnapshot:
     mapping: RepoMapping
     stories: tuple[ShortcutStory, ...]
     open_issues: tuple[GitHubIssue, ...]
-    default_branch: str = ""
 
     @property
     def open_issue_keys(self) -> frozenset[IssueKey]:

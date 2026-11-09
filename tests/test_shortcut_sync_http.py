@@ -14,7 +14,6 @@ from shortcut_sync import http_client
 from shortcut_sync.errors import ApiError
 from shortcut_sync.github_client import GitHubClient
 from shortcut_sync.http_client import HttpClient, backoff_delay, retry_after_delay
-from shortcut_sync.sonar_client import SonarClient
 
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
@@ -154,17 +153,6 @@ def test_github_lists_every_page_and_drops_pull_requests(fake_http: FakeHttp) ->
     assert fake_http.calls[0].headers["Authorization"] == "Bearer test-github-token"
 
 
-def test_sonar_reads_anonymously_and_skips_private_projects(fake_http: FakeHttp) -> None:
-    url = "https://sonarcloud.io/api/qualitygates/project_status?projectKey="
-    fake_http.add("GET", f"{url}chrysa_public", {"projectStatus": {"status": "ERROR"}})
-    fake_http.add("GET", f"{url}chrysa_private", {"errors": []}, status=404)
-    client = SonarClient.anonymous(base_url="https://sonarcloud.io")
-
-    assert client.quality_gate_status("chrysa_public") == "ERROR"
-    assert client.quality_gate_status("chrysa_private") is None
-    assert "Authorization" not in fake_http.calls[0].headers
-
-
 @pytest.mark.parametrize(
     ("target", "followed"),
     [
@@ -181,19 +169,3 @@ def test_redirects_stay_on_the_same_https_origin(target: str, followed: bool) ->
     redirected = handler.redirect_request(request, io.BytesIO(), 302, "Found", HTTPMessage(), target)
 
     assert (redirected is not None) is followed
-
-
-def test_check_runs_without_a_list_mean_no_run(fake_http: FakeHttp) -> None:
-    url = (
-        "https://api.github.com/repos/chrysa/alpha/commits/main/check-runs"
-        "?check_name=guardrails%2Fscan&per_page=100"
-    )
-    fake_http.add("GET", url, {"message": "odd"})
-    client = GitHubClient.from_token(
-        token="test-github-token", base_url="https://api.github.com", owner="chrysa"
-    )
-
-    run = client.latest_check_run(
-        repo="alpha", ref="main", check_name="guardrails/scan", app_slug="guardrails"
-    )
-    assert run is None

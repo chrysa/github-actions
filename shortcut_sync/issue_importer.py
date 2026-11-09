@@ -1,4 +1,4 @@
-"""Step 1 — open GitHub issues without a Shortcut link become stories in the mapped epic."""
+"""Step 2 — open GitHub issues without a Shortcut link become stories in the mapped epic."""
 
 from __future__ import annotations
 

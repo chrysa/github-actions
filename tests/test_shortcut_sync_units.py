@@ -10,12 +10,9 @@ from shortcut_sync.epic_workflow_states import EpicWorkflowStates
 from shortcut_sync.errors import ConfigurationError, MissingSecretError
 from shortcut_sync.issue_key import IssueKey
 from shortcut_sync.references import (
-    guardrails_marker,
     has_shortcut_reference,
     issue_comment,
     linked_issue_keys,
-    same_link,
-    sonar_dashboard_url,
     story_type_for,
 )
 from shortcut_sync.repo_mapping import RepoMapping
@@ -23,7 +20,6 @@ from shortcut_sync.story_draft import STORY_NAME_MAX_CHARS, StoryDraft
 from shortcut_sync.sync_config import SyncConfig
 from shortcut_sync.sync_counter import SyncCounter
 from shortcut_sync.sync_report import SyncReport
-from shortcut_sync.timestamps import earliest, latest, parse_timestamp, plan_override, same_instant
 from shortcut_sync.workflow_states import WorkflowStates
 
 SECRETS = {"SHORTCUT_API_TOKEN": "test-shortcut-token", "SYNC_GITHUB_TOKEN": "test-github-token"}
@@ -81,15 +77,9 @@ def test_linked_issue_keys_read_links_and_sync_markers() -> None:
     }
 
 
-def test_small_formatters() -> None:
+def test_issue_comment_format() -> None:
     assert issue_comment(story_id=5, app_url="https://app.shortcut.com/chrysa/story/5") == (
         "Shortcut: sc-5 https://app.shortcut.com/chrysa/story/5"
-    )
-    assert sonar_dashboard_url(sonar_url="https://sonarcloud.io", project_key="chrysa_alpha") == (
-        "https://sonarcloud.io/dashboard?id=chrysa_alpha"
-    )
-    assert same_link(
-        "https://SonarCloud.io/dashboard?id=chrysa_alpha/", "https://sonarcloud.io/dashboard?id=chrysa_alpha"
     )
 
 
@@ -246,40 +236,9 @@ def test_report_enforces_the_progress_update_cap() -> None:
     assert report.has_failures
 
 
-def test_guardrails_marker_is_not_an_issue_marker() -> None:
-    marker = guardrails_marker(owner="chrysa", repo="Alpha")
-
-    assert marker == "chrysa/alpha#guardrails"
-    assert IssueKey.from_external_id(marker) is None
-
-
-@pytest.mark.parametrize("value", [None, "", 12, "yesterday"])
-def test_unusable_timestamps_parse_to_none(value: object) -> None:
-    assert parse_timestamp(value) is None
-
-
-def test_timestamps_compare_as_instants_and_keep_the_api_text() -> None:
-    values = ["2026-01-10T09:00:00Z", None, "2026-01-05T10:00:00+01:00", "bad", "2026-01-05T08:30:00"]
-
-    assert earliest(values) == "2026-01-05T08:30:00"
-    assert latest(values) == "2026-01-10T09:00:00Z"
-    assert earliest([]) is None
-    assert latest([None]) is None
-    assert same_instant("2026-01-05T09:00:00Z", "2026-01-05T10:00:00+01:00")
-    assert not same_instant(None, None)
-
-
-def test_an_override_is_set_when_empty_and_kept_when_set_by_hand() -> None:
-    computed = "2026-01-05T09:00:00Z"
-    changes: dict[str, object] = {}
-
-    assert plan_override(changes, field="f", current=None, computed=None) is False
-    assert plan_override(changes, field="f", current=computed, computed=computed) is False
-    assert changes == {}
-    assert plan_override(changes, field="f", current="2025-01-01T00:00:00Z", computed=computed) is True
-    assert changes == {}
-    assert plan_override(changes, field="f", current=None, computed=computed) is False
-    assert changes == {"f": computed}
+def test_a_non_numeric_marker_is_not_an_issue_marker() -> None:
+    # Stories opened by the removed GuardRails step carry ``chrysa/<repo>#guardrails``.
+    assert IssueKey.from_external_id("chrysa/alpha#guardrails") is None
 
 
 def test_epic_workflow_states_are_resolved_from_the_api_payload() -> None:
