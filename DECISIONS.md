@@ -118,4 +118,15 @@ follow a redirect to another host. The job reads two secrets, `SHORTCUT_API_TOKE
 (configurable); manual runs default to dry run (read only, planned counts); workflow
 states are resolved from `GET /workflows`, never hardcoded.
 
+**Amendment 2026-11-09 (owner rules sc-5963, sc-5967):** two more steps. (1) The GuardRails
+check run `guardrails/scan` of each mapped repository's default branch drives one bug story
+(failing → opened once, passing → done); `SYNC_GITHUB_TOKEN` additionally needs
+**Checks: read**. GuardRails exposes no severity on the check run, so the rule keys on the
+`failure` conclusion. (2) Over the whole workspace, epic states and
+`started_at_override` / `completed_at_override` follow their stories, and an objective moves
+to `in progress` with its first started epic; `planned_start_date` and `deadline` are never
+written, a date set by hand is never overwritten, objectives are never set to done. Epic
+states come from `GET /epic-workflow`; epic + objective updates are capped at 50 per run
+(`SYNC_MAX_PROGRESS_UPDATES`).
+
 ---

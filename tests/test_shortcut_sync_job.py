@@ -17,6 +17,9 @@ REPO = "https://api.github.com/repos/chrysa/alpha"
 ISSUES = f"{REPO}/issues?state=open&per_page=100&page=1"
 SONAR = "https://sonarcloud.io/api/qualitygates/project_status?projectKey=chrysa_alpha"
 DASHBOARD = "https://sonarcloud.io/dashboard?id=chrysa_alpha"
+CHECK_RUNS = f"{REPO}/commits/develop/check-runs?check_name=guardrails%2Fscan&per_page=100"
+RUN_URL = "https://github.com/chrysa/alpha/runs/900"
+GUARDRAILS_MARKER = "chrysa/alpha#guardrails"
 APPLY = {
     "SHORTCUT_API_TOKEN": "test-shortcut-token",
     "SYNC_GITHUB_TOKEN": "test-github-token",
@@ -34,6 +37,14 @@ WORKFLOWS = [
         ],
     }
 ]
+EPIC_WORKFLOW = {
+    "id": 1,
+    "epic_states": [
+        {"id": 500, "type": "unstarted", "position": 0},
+        {"id": 501, "type": "started", "position": 1},
+        {"id": 502, "type": "done", "position": 2},
+    ],
+}
 EPICS = [
     {"id": 100, "external_id": "chrysa/alpha", "archived": False},
     {"id": 101, "external_id": None, "archived": False},
@@ -79,6 +90,9 @@ def build_world(
     fake.add("GET", f"{SC}/workflows", WORKFLOWS)
     fake.add("GET", f"{SC}/epics?includes_description=false", EPICS)
     fake.add("GET", f"{SC}/epics/100/stories?includes_description=false", list(stories))
+    for empty_epic in (101, 102):
+        fake.add("GET", f"{SC}/epics/{empty_epic}/stories?includes_description=false", [])
+    fake.add("GET", f"{SC}/epic-workflow", EPIC_WORKFLOW)
     fake.add("GET", REPO, {"archived": False, "has_issues": True})
     fake.add("GET", ISSUES, list(issues))
     if gate is None:
@@ -353,3 +367,128 @@ def test_shortcut_calls_carry_the_token_header(fake_http: FakeHttp) -> None:
     shortcut_calls = [call for call in fake_http.calls if call.url.startswith(SC)]
     assert shortcut_calls
     assert all(call.headers["Shortcut-token"] == "test-shortcut-token" for call in shortcut_calls)
+
+
+def check_run(
+    run_id: int, *, conclusion: str | None, status: str = "completed", app: str = "guardrails"
+) -> dict[str, object]:
+    return {
+        "id": run_id,
+        "name": "guardrails/scan",
+        "status": status,
+        "conclusion": conclusion,
+        "html_url": f"https://github.com/chrysa/alpha/runs/{run_id}",
+        "app": {"slug": app},
+    }
+
+
+def guardrails_world(
+    fake: FakeHttp, *, runs: Sequence[dict[str, object]], stories: Sequence[dict[str, object]] = ()
+) -> None:
+    """A repository with a default branch whose head carries ``runs``; no Sonar project."""
+    build_world(fake, gate=None, stories=stories)
+    fake.routes[f"GET {REPO}"] = [
+        (200, {"archived": False, "has_issues": True, "default_branch": "develop"}, {})
+    ]
+    fake.add("GET", CHECK_RUNS, {"total_count": len(runs), "check_runs": list(runs)})
+
+
+def guardrails_story(story_id: int, *, state: int = 10) -> dict[str, object]:
+    return {**story(story_id, state=state), "external_id": "Chrysa/Alpha#guardrails"}
+
+
+def test_failing_guardrails_scan_opens_one_bug_story(
+    fake_http: FakeHttp, capsys: pytest.CaptureFixture[str]
+) -> None:
+    runs = [
+        check_run(899, conclusion="success"),
+        check_run(900, conclusion="failure"),
+        check_run(901, conclusion=None, status="in_progress"),
+        check_run(902, conclusion="success", app="impostor"),
+    ]
+    guardrails_world(fake_http, runs=runs)
+    fake_http.add(
+        "POST", f"{SC}/stories", {"id": 700, "app_url": "https://app.shortcut.com/chrysa/story/700"}
+    )
+
+    assert main(APPLY) == 0
+
+    assert writes(fake_http) == [("POST", f"{SC}/stories")]
+    created = fake_http.writes()[0].body
+    assert created["name"] == "GuardRails : failles hautes sur la branche par défaut"
+    assert created["story_type"] == "bug"
+    assert created["epic_id"] == 100
+    assert created["external_id"] == GUARDRAILS_MARKER
+    assert created["external_links"] == [RUN_URL]
+    assert "labels" not in created
+    assert "label_ids" not in created
+    output = capsys.readouterr().out
+    assert counters(output)["guardrails_failing"] == "1"
+    assert counters(output)["guardrails_stories_created"] == "1"
+    assert "alpha" not in output
+
+
+def test_failing_guardrails_scan_with_an_open_story_writes_nothing(fake_http: FakeHttp) -> None:
+    guardrails_world(fake_http, runs=[check_run(900, conclusion="failure")], stories=[guardrails_story(71)])
+
+    assert main(APPLY) == 0
+
+    assert writes(fake_http) == []
+
+
+def test_failing_guardrails_run_without_a_github_url_gets_no_link(fake_http: FakeHttp) -> None:
+    run = {**check_run(900, conclusion="failure"), "html_url": "https://elsewhere.example/run"}
+    guardrails_world(fake_http, runs=[run])
+    fake_http.add("POST", f"{SC}/stories", {"id": 700})
+
+    assert main(APPLY) == 0
+
+    assert fake_http.writes()[0].body["external_links"] == []
+
+
+@pytest.mark.parametrize("conclusion", ["success", "neutral"])
+def test_passing_guardrails_scan_closes_the_story(fake_http: FakeHttp, conclusion: str) -> None:
+    guardrails_world(
+        fake_http,
+        runs=[check_run(900, conclusion=conclusion)],
+        stories=[guardrails_story(71), guardrails_story(72, state=12), story(73)],
+    )
+    fake_http.add("PUT", f"{SC}/stories/71", {"id": 71})
+
+    assert main(APPLY) == 0
+
+    assert writes(fake_http) == [("PUT", f"{SC}/stories/71")]
+    assert fake_http.writes()[0].body == {"workflow_state_id": 12}
+
+
+@pytest.mark.parametrize(
+    "runs",
+    [[], [check_run(900, conclusion="cancelled")], [check_run(900, conclusion=None, status="queued")]],
+)
+def test_missing_or_inconclusive_guardrails_scan_is_skipped(
+    fake_http: FakeHttp, capsys: pytest.CaptureFixture[str], runs: list[dict[str, object]]
+) -> None:
+    guardrails_world(fake_http, runs=runs, stories=[guardrails_story(71)])
+
+    assert main(APPLY) == 0
+
+    assert writes(fake_http) == []
+    assert counters(capsys.readouterr().out)["guardrails_skipped"] == "1"
+
+
+def test_unreadable_check_runs_are_skipped(fake_http: FakeHttp, capsys: pytest.CaptureFixture[str]) -> None:
+    guardrails_world(fake_http, runs=[])
+    fake_http.routes[f"GET {CHECK_RUNS}"] = [(409, {"message": "Git Repository is empty."}, {})]
+
+    assert main(APPLY) == 0
+
+    assert counters(capsys.readouterr().out)["guardrails_skipped"] == "1"
+
+
+def test_guardrails_dry_run_plans_the_story(fake_http: FakeHttp, capsys: pytest.CaptureFixture[str]) -> None:
+    guardrails_world(fake_http, runs=[check_run(900, conclusion="failure")])
+
+    assert main(DRY_RUN) == 0
+
+    assert writes(fake_http) == []
+    assert counters(capsys.readouterr().out)["guardrails_stories_created"] == "1"

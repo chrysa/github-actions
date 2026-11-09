@@ -1,4 +1,4 @@
-"""Run report: counters, the story-creation budget, and the dry-run aware action log."""
+"""Run report: counters, the story-creation and epic/objective-update budgets, the action log."""
 
 from __future__ import annotations
 
@@ -9,7 +9,11 @@ from typing import Final
 from shortcut_sync.sync_counter import SyncCounter
 
 DRY_RUN_PREFIX: Final = "[dry-run] "
-FAILURE_COUNTERS: Final = (SyncCounter.REPO_STEP_FAILURES, SyncCounter.ISSUE_COMMENTS_FAILED)
+FAILURE_COUNTERS: Final = (
+    SyncCounter.REPO_STEP_FAILURES,
+    SyncCounter.ISSUE_COMMENTS_FAILED,
+    SyncCounter.PROGRESS_STEP_FAILURES,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +21,12 @@ logger = logging.getLogger(__name__)
 class SyncReport:
     """Counts what the run did (or, in dry-run, would do)."""
 
-    def __init__(self, *, dry_run: bool, max_creations: int) -> None:
+    def __init__(self, *, dry_run: bool, max_creations: int, max_progress_updates: int) -> None:
         self._dry_run = dry_run
         self._max_creations = max_creations
+        self._max_progress_updates = max_progress_updates
         self._creations = 0
+        self._progress_updates = 0
         self._counts: Counter[SyncCounter] = Counter()
 
     @property
@@ -60,6 +66,14 @@ class SyncReport:
             self.add(SyncCounter.CREATIONS_DEFERRED)
             return False
         self._creations += 1
+        return True
+
+    def reserve_progress_update(self) -> bool:
+        """Take one slot of the per-run epic/objective update cap; count a deferral when exhausted."""
+        if self._progress_updates >= self._max_progress_updates:
+            self.add(SyncCounter.PROGRESS_UPDATES_DEFERRED)
+            return False
+        self._progress_updates += 1
         return True
 
     def summary_lines(self) -> list[str]:

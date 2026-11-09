@@ -1,4 +1,4 @@
-"""Pure helpers: Shortcut references, story typing, SonarCloud keys, issue comments."""
+"""Pure helpers: Shortcut references, story typing, SonarCloud keys, sync markers, issue comments."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ STORY_TYPE_BUG: Final = "bug"
 STORY_TYPE_FEATURE: Final = "feature"
 STORY_TYPE_CHORE: Final = "chore"
 BUG_LABELS: Final = frozenset({"bug", "sentry"})
+GUARDRAILS_MARKER_SUFFIX: Final = "#guardrails"
 
 
 def has_shortcut_reference(text: object) -> bool:
@@ -54,6 +55,11 @@ def sonar_project_key(*, owner: str, repo: str) -> str:
 def sonar_dashboard_url(*, sonar_url: str, project_key: str) -> str:
     """Dashboard URL, also the dedupe key of the quality-gate story."""
     return with_query(path=f"{sonar_url}/dashboard", query={"id": project_key})
+
+
+def guardrails_marker(*, owner: str, repo: str) -> str:
+    """``external_id`` of the GuardRails story of a repository: ``owner/repo#guardrails``."""
+    return f"{owner}/{repo}{GUARDRAILS_MARKER_SUFFIX}".lower()
 
 
 def same_link(left: str, right: str) -> bool:

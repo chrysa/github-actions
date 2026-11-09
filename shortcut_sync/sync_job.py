@@ -1,4 +1,4 @@
-"""One run: read Shortcut and GitHub, then close, rate and import — repo by repo."""
+"""One run: read Shortcut and GitHub, close, rate, scan and import repo by repo, then sync progress."""
 
 from __future__ import annotations
 
@@ -7,7 +7,9 @@ from collections.abc import Callable, Sequence
 from typing import Final
 
 from shortcut_sync.closed_issue_resolver import ClosedIssueResolver
+from shortcut_sync.epic_progress_sync import EpicProgressSync
 from shortcut_sync.errors import ShortcutSyncError
+from shortcut_sync.guardrails_sync import GuardRailsSync
 from shortcut_sync.issue_importer import IssueImporter
 from shortcut_sync.payloads import GitHubRepository, ShortcutStory
 from shortcut_sync.quality_gate_sync import QualityGateSync
@@ -33,21 +35,22 @@ logger = logging.getLogger(__name__)
 
 class ShortcutSyncJob:
     """Shortcut read failures abort the run (an incomplete link index could duplicate stories);
-    GitHub, SonarCloud and write failures are contained per repository and counted."""
+    GitHub, SonarCloud and write failures are contained per repository, progress failures per
+    epic or objective, and counted."""
 
     def __init__(self, *, context: SyncContext) -> None:
         self._context = context
 
     def run(self) -> SyncReport:
-        """Execute the three steps; closing and quality first, so the cap favours them."""
+        """Execute the repository steps (closing, quality and GuardRails first, so the creation
+        cap favours them), then the epic and objective progress over the whole workspace."""
         shortcut = self._context.shortcut
         states = WorkflowStates.from_workflows(
             workflows=shortcut.list_workflows(),
             workflow_id=self._context.config.workflow_id,
         )
-        mappings = RepoMapping.from_epics(
-            epics=shortcut.list_epics(), owner=self._context.config.github_owner
-        )
+        epics = shortcut.list_epics()
+        mappings = RepoMapping.from_epics(epics=epics, owner=self._context.config.github_owner)
         self._count_mappings(mappings)
         stories = {mapping: self._load_stories(mapping) for mapping in mappings}
         linked = linked_issue_keys(story for group in stories.values() for story in group)
@@ -62,11 +65,13 @@ class ShortcutSyncJob:
                 context=self._context, states=states, writer=writer, snapshots=snapshots
             ).sync_repo,
             QualityGateSync(context=self._context, states=states, writer=writer).sync_repo,
+            GuardRailsSync(context=self._context, states=states, writer=writer).sync_repo,
             IssueImporter(context=self._context, states=states, writer=writer, linked=linked).sync_repo,
         )
         for step in steps:
             for snapshot in snapshots:
                 self._run_contained(step=step, snapshot=snapshot)
+        self._run_progress(EpicProgressSync(context=self._context, states=states, epics=epics))
         return self._context.report
 
     def _count_mappings(self, mappings: Sequence[RepoMapping]) -> None:
@@ -94,7 +99,13 @@ class ShortcutSyncJob:
             logger.warning(f"::warning::epic {mapping.primary_epic_id}: repository not read ({error})")
             return None
         report.add(SyncCounter.ISSUES_OPEN, amount=len(issues))
-        return RepoSnapshot(mapping=mapping, stories=stories, open_issues=issues)
+        default_branch = repository.get("default_branch") if repository is not None else None
+        return RepoSnapshot(
+            mapping=mapping,
+            stories=stories,
+            open_issues=issues,
+            default_branch=default_branch if isinstance(default_branch, str) else "",
+        )
 
     def _load_stories(self, mapping: RepoMapping) -> tuple[ShortcutStory, ...]:
         return tuple(
@@ -102,6 +113,13 @@ class ShortcutSyncJob:
             for epic_id in mapping.epic_ids
             for story in self._context.shortcut.list_epic_stories(epic_id)
         )
+
+    def _run_progress(self, progress: EpicProgressSync) -> None:
+        try:
+            progress.run()
+        except ShortcutSyncError as error:
+            self._context.report.add(SyncCounter.PROGRESS_STEP_FAILURES)
+            logger.warning(f"::warning::epic progress step failed ({error})")
 
     def _run_contained(self, *, step: RepoStep, snapshot: RepoSnapshot) -> None:
         try:

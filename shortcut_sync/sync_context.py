@@ -31,5 +31,9 @@ class SyncContext:
                 owner=config.github_owner,
             ),
             sonar=SonarClient.anonymous(base_url=config.sonar_url),
-            report=SyncReport(dry_run=config.dry_run, max_creations=config.max_creations),
+            report=SyncReport(
+                dry_run=config.dry_run,
+                max_creations=config.max_creations,
+                max_progress_updates=config.max_progress_updates,
+            ),
         )

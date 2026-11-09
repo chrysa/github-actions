@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Final, cast
 
 from shortcut_sync.errors import ApiError
 from shortcut_sync.http_client import HttpClient, with_query
-from shortcut_sync.payloads import ShortcutEpic, ShortcutStory, ShortcutWorkflow
+from shortcut_sync.payloads import (
+    ShortcutEpic,
+    ShortcutEpicWorkflow,
+    ShortcutObjective,
+    ShortcutStory,
+    ShortcutWorkflow,
+)
 from shortcut_sync.story_draft import StoryDraft
 
 SHORTCUT_SERVICE: Final = "Shortcut"
@@ -41,6 +48,13 @@ class ShortcutClient:
             )
         return cast(ShortcutStory, story)
 
+    def get_epic_workflow(self) -> ShortcutEpicWorkflow:
+        """``GET /epic-workflow``: the workspace epic states."""
+        workflow = self._http.request_object(method="GET", path="epic-workflow")
+        if workflow is None:
+            raise ApiError(service=SHORTCUT_SERVICE, method="GET", reason="empty epic workflow")
+        return cast(ShortcutEpicWorkflow, workflow)
+
     def get_epic_health(self, epic_id: int) -> str | None:
         """Current health status of an epic, or None when it has none."""
         health = self._http.request_object(
@@ -61,6 +75,10 @@ class ShortcutClient:
         path = with_query(path="epics", query=WITHOUT_DESCRIPTION)
         return [cast(ShortcutEpic, epic) for epic in self._http.request_objects(path=path)]
 
+    def list_objectives(self) -> list[ShortcutObjective]:
+        """Every objective of the workspace."""
+        return [cast(ShortcutObjective, item) for item in self._http.request_objects(path="objectives")]
+
     def list_workflows(self) -> list[ShortcutWorkflow]:
         """Every workflow with its states."""
         return [cast(ShortcutWorkflow, workflow) for workflow in self._http.request_objects(path="workflows")]
@@ -72,6 +90,14 @@ class ShortcutClient:
             path=f"stories/{story_id}",
             body={"workflow_state_id": workflow_state_id},
         )
+
+    def update_epic(self, *, epic_id: int, changes: Mapping[str, object]) -> None:
+        """``PUT /epics/{id}`` with the given fields only."""
+        self._http.request_object(method="PUT", path=f"epics/{epic_id}", body=dict(changes))
+
+    def update_objective(self, *, objective_id: int, changes: Mapping[str, object]) -> None:
+        """``PUT /objectives/{id}`` with the given fields only."""
+        self._http.request_object(method="PUT", path=f"objectives/{objective_id}", body=dict(changes))
 
     def set_epic_health(self, *, epic_id: int, status: str, text: str) -> None:
         """``POST /epics/{id}/health`` — a new health record (status + short text)."""

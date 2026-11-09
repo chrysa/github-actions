@@ -1,6 +1,7 @@
 ---
 # Daily Shortcut sync (DEC-V14-125): GitHub issues -> Shortcut stories, closed issues -> done,
-# SonarCloud quality gate -> epic health. Logic and tests live in shortcut_sync/.
+# SonarCloud quality gate -> epic health, GuardRails scan of the default branch -> bug story,
+# then epic and objective states/dates follow their stories. Logic and tests live in shortcut_sync/.
 # This repository is public: the job logs only counts and numeric ids.
 name: Shortcut sync
 
@@ -15,6 +16,10 @@ on:
                 default: true
             max_creations:
                 description: Maximum number of Shortcut stories this run may create (empty = 25)
+                type: string
+                default: ""
+            max_progress_updates:
+                description: Maximum number of Shortcut epic and objective updates this run may write (empty = 50)
                 type: string
                 default: ""
 
@@ -48,4 +53,5 @@ jobs:
                   # Scheduled runs apply; a manual run follows its dry_run input.
                   SYNC_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
                   SYNC_MAX_CREATIONS: ${{ inputs.max_creations }}
+                  SYNC_MAX_PROGRESS_UPDATES: ${{ inputs.max_progress_updates }}
               run: python3 -m shortcut_sync

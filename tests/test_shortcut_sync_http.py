@@ -181,3 +181,19 @@ def test_redirects_stay_on_the_same_https_origin(target: str, followed: bool) ->
     redirected = handler.redirect_request(request, io.BytesIO(), 302, "Found", HTTPMessage(), target)
 
     assert (redirected is not None) is followed
+
+
+def test_check_runs_without_a_list_mean_no_run(fake_http: FakeHttp) -> None:
+    url = (
+        "https://api.github.com/repos/chrysa/alpha/commits/main/check-runs"
+        "?check_name=guardrails%2Fscan&per_page=100"
+    )
+    fake_http.add("GET", url, {"message": "odd"})
+    client = GitHubClient.from_token(
+        token="test-github-token", base_url="https://api.github.com", owner="chrysa"
+    )
+
+    run = client.latest_check_run(
+        repo="alpha", ref="main", check_name="guardrails/scan", app_slug="guardrails"
+    )
+    assert run is None

@@ -6,9 +6,11 @@ import logging
 
 import pytest
 
+from shortcut_sync.epic_workflow_states import EpicWorkflowStates
 from shortcut_sync.errors import ConfigurationError, MissingSecretError
 from shortcut_sync.issue_key import IssueKey
 from shortcut_sync.references import (
+    guardrails_marker,
     has_shortcut_reference,
     issue_comment,
     linked_issue_keys,
@@ -21,6 +23,7 @@ from shortcut_sync.story_draft import STORY_NAME_MAX_CHARS, StoryDraft
 from shortcut_sync.sync_config import SyncConfig
 from shortcut_sync.sync_counter import SyncCounter
 from shortcut_sync.sync_report import SyncReport
+from shortcut_sync.timestamps import earliest, latest, parse_timestamp, plan_override, same_instant
 from shortcut_sync.workflow_states import WorkflowStates
 
 SECRETS = {"SHORTCUT_API_TOKEN": "test-shortcut-token", "SYNC_GITHUB_TOKEN": "test-github-token"}
@@ -95,6 +98,7 @@ def test_config_defaults_are_safe_and_hide_tokens() -> None:
 
     assert config.dry_run is True
     assert config.max_creations == 25
+    assert config.max_progress_updates == 50
     assert config.workflow_id is None
     assert config.shortcut_api_url == "https://api.app.shortcut.com/api/v3"
     assert "test-shortcut-token" not in repr(config)
@@ -103,10 +107,21 @@ def test_config_defaults_are_safe_and_hide_tokens() -> None:
 
 def test_config_reads_overrides() -> None:
     config = SyncConfig.from_env(
-        {**SECRETS, "SYNC_DRY_RUN": "false", "SYNC_MAX_CREATIONS": "3", "SHORTCUT_WORKFLOW_ID": "9"}
+        {
+            **SECRETS,
+            "SYNC_DRY_RUN": "false",
+            "SYNC_MAX_CREATIONS": "3",
+            "SYNC_MAX_PROGRESS_UPDATES": "4",
+            "SHORTCUT_WORKFLOW_ID": "9",
+        }
     )
 
-    assert (config.dry_run, config.max_creations, config.workflow_id) == (False, 3, 9)
+    assert (config.dry_run, config.max_creations, config.max_progress_updates, config.workflow_id) == (
+        False,
+        3,
+        4,
+        9,
+    )
 
 
 @pytest.mark.parametrize(
@@ -114,6 +129,7 @@ def test_config_reads_overrides() -> None:
     [
         {"SYNC_DRY_RUN": "maybe"},
         {"SYNC_MAX_CREATIONS": "-1"},
+        {"SYNC_MAX_PROGRESS_UPDATES": "many"},
         {"SHORTCUT_WORKFLOW_ID": "abc"},
         {"GITHUB_API_URL": "http://api.github.com"},
     ],
@@ -199,7 +215,7 @@ def test_story_draft_payload_never_carries_labels() -> None:
 
 
 def test_report_enforces_the_creation_cap() -> None:
-    report = SyncReport(dry_run=False, max_creations=2)
+    report = SyncReport(dry_run=False, max_creations=2, max_progress_updates=0)
 
     assert [report.reserve_creation() for _ in range(4)] == [True, True, False, False]
     assert report.count(SyncCounter.CREATIONS_DEFERRED) == 2
@@ -210,7 +226,7 @@ def test_report_enforces_the_creation_cap() -> None:
 
 
 def test_report_marks_dry_run_actions(caplog: pytest.LogCaptureFixture) -> None:
-    report = SyncReport(dry_run=True, max_creations=1)
+    report = SyncReport(dry_run=True, max_creations=1, max_progress_updates=0)
 
     with caplog.at_level(logging.INFO):
         report.record(SyncCounter.STORIES_CREATED, detail="epic 1")
@@ -218,3 +234,71 @@ def test_report_marks_dry_run_actions(caplog: pytest.LogCaptureFixture) -> None:
     assert caplog.messages == ["[dry-run] stories_created_from_issues: epic 1"]
     assert report.summary_lines()[0].startswith("mode: dry-run")
     assert "| `stories_created_from_issues` | 1 |" in report.markdown_summary()
+
+
+def test_report_enforces_the_progress_update_cap() -> None:
+    report = SyncReport(dry_run=False, max_creations=0, max_progress_updates=1)
+
+    assert [report.reserve_progress_update() for _ in range(3)] == [True, False, False]
+    assert report.count(SyncCounter.PROGRESS_UPDATES_DEFERRED) == 2
+
+    report.add(SyncCounter.PROGRESS_STEP_FAILURES)
+    assert report.has_failures
+
+
+def test_guardrails_marker_is_not_an_issue_marker() -> None:
+    marker = guardrails_marker(owner="chrysa", repo="Alpha")
+
+    assert marker == "chrysa/alpha#guardrails"
+    assert IssueKey.from_external_id(marker) is None
+
+
+@pytest.mark.parametrize("value", [None, "", 12, "yesterday"])
+def test_unusable_timestamps_parse_to_none(value: object) -> None:
+    assert parse_timestamp(value) is None
+
+
+def test_timestamps_compare_as_instants_and_keep_the_api_text() -> None:
+    values = ["2026-01-10T09:00:00Z", None, "2026-01-05T10:00:00+01:00", "bad", "2026-01-05T08:30:00"]
+
+    assert earliest(values) == "2026-01-05T08:30:00"
+    assert latest(values) == "2026-01-10T09:00:00Z"
+    assert earliest([]) is None
+    assert latest([None]) is None
+    assert same_instant("2026-01-05T09:00:00Z", "2026-01-05T10:00:00+01:00")
+    assert not same_instant(None, None)
+
+
+def test_an_override_is_set_when_empty_and_kept_when_set_by_hand() -> None:
+    computed = "2026-01-05T09:00:00Z"
+    changes: dict[str, object] = {}
+
+    assert plan_override(changes, field="f", current=None, computed=None) is False
+    assert plan_override(changes, field="f", current=computed, computed=computed) is False
+    assert changes == {}
+    assert plan_override(changes, field="f", current="2025-01-01T00:00:00Z", computed=computed) is True
+    assert changes == {}
+    assert plan_override(changes, field="f", current=None, computed=computed) is False
+    assert changes == {"f": computed}
+
+
+def test_epic_workflow_states_are_resolved_from_the_api_payload() -> None:
+    workflow = {
+        "id": 1,
+        "epic_states": [
+            {"id": 1, "type": "Unstarted", "position": 0},
+            {"id": 3, "type": "Started", "position": 2},
+            {"id": 2, "type": "started", "position": 1},
+            {"id": 4, "type": "done", "position": 3},
+        ],
+    }
+
+    states = EpicWorkflowStates.from_workflow(workflow)
+
+    assert states.state_id_for("started") == 2
+    assert states.state_id_for("done") == 4
+    assert states.type_of({"epic_state_id": 1}) == "unstarted"
+    assert states.type_of({"epic_state_id": 99}) is None
+    assert states.type_of({}) is None
+    with pytest.raises(ConfigurationError, match="epic workflow"):
+        EpicWorkflowStates.from_workflow({"epic_states": [{"id": 1, "type": "done"}]})
