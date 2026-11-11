@@ -42,11 +42,11 @@ runs:
       GITHUB_TOKEN: ${{ inputs.github-token || github.token }}
       SONAR_TOKEN: ${{ inputs.sonar-token }}
     name: SonarCloud Scan
-    uses: SonarSource/sonarqube-scan-action@v4.2.1
+    uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
     with:
       args: '-Dsonar.projectKey=${{ inputs.project-key }} -Dsonar.organization=${{
-        inputs.organization }} -Dsonar.projectName=${{ inputs.project-name || inputs.project-key
-        }} -Dsonar.sourceEncoding=UTF-8 -Dsonar.sources=${{ inputs.sources }} -Dsonar.typescript.tsconfigPath=${{
+        inputs.organization }} "-Dsonar.projectName=${{ inputs.project-name || inputs.project-key
+        }}" -Dsonar.sourceEncoding=UTF-8 -Dsonar.sources=${{ inputs.sources }} -Dsonar.typescript.tsconfigPath=${{
         inputs.tsconfig }} -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
         -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/public/**
 
