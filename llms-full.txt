@@ -11,27 +11,28 @@ Composite GitHub Actions and their tested Python entrypoints for the chrysa flee
   agents/
     code-reviewer.md
     composite-action-reviewer.md
-    general-backend-developer.md
-    general-code-quality-debugger.md
-    general-devops.md
-    general-frontend-developer.md
-    general-fullstack-developer.md
-    general-pm.md
-    general-qa.md
-    general-solution-architect.md
-    general-technical-project-lead.md
-    general-technical-writer.md
     security-auditor.md
     test-runner.md
   ape/
     README.md
     ape-transform-v2.md
     ape_hook.py
+  commands/
+    adr-new.md
+    commit.md
+    custom-init.md
+    help-commands.md
+    issue.md
+    reviewpr.md
+    test.md
   hooks/
     check-no-env-files.cjs
     claude-config-drift.cjs
     format.py
     graphify-auto-update.cjs
+    pre-compact.sh
+    read_guard.py
+    session-context.sh
   rules/
     folder-readme.md
   settings.json
@@ -106,6 +107,9 @@ Composite GitHub Actions and their tested Python entrypoints for the chrysa flee
       SKILL.md
     verification-loop/
       SKILL.md
+.codex/
+  rules/
+    prism-ai-lint.rules
 .editorconfig
 .env.example
 .gitattributes
@@ -152,6 +156,7 @@ Composite GitHub Actions and their tested Python entrypoints for the chrysa flee
     release.yml
     sast.yml
     secret-scan.yml
+    shortcut-sync.yml
     sonar.yml
     sync-labels.yml
     update-pr-body.yml
@@ -238,6 +243,36 @@ scripts/
   lint_helm.sh
   lint_yaml.sh
   quality_gate.py
+shortcut_sync/
+  README.md
+  __init__.py
+  __main__.py
+  closed_issue_resolver.py
+  entrypoint.py
+  epic_progress_plan.py
+  epic_progress_sync.py
+  epic_timeline.py
+  epic_workflow_states.py
+  errors.py
+  github_client.py
+  http_client.py
+  issue_importer.py
+  issue_key.py
+  objective_progress_sync.py
+  payloads.py
+  progress_writer.py
+  references.py
+  repo_mapping.py
+  repo_snapshot.py
+  shortcut_client.py
+  story_draft.py
+  story_writer.py
+  sync_config.py
+  sync_context.py
+  sync_counter.py
+  sync_job.py
+  sync_report.py
+  workflow_states.py
 sonar-js-scan/
   action.yml
 sonar-project.properties
@@ -272,10 +307,15 @@ standards/
     stack.md
     testing.md
 tests/
+  conftest.py
   test_actions_yaml.py
   test_branch_sync.py
   test_notion_api.py
   test_roadmap_sync.py
+  test_shortcut_sync_http.py
+  test_shortcut_sync_job.py
+  test_shortcut_sync_progress.py
+  test_shortcut_sync_units.py
   test_sync_entrypoints.py
 tool-setup/
   action.yml
@@ -292,6 +332,7 @@ version: 0.0.0
 
 .claude/ape/ape_hook.py
 .claude/hooks/format.py
+.claude/hooks/read_guard.py
 notion_sync/__init__.py — Notion sync entrypoints used by the notion-* composite actions.
 notion_sync/branch_sync.py — Sync the pushed branch to the shared Notion "Branch Activity" database.
 notion_sync/logging_setup.py — Logging wired to the GitHub Actions log stream.
@@ -299,8 +340,33 @@ notion_sync/notion_api.py — Minimal stdlib-only Notion + GitHub REST helpers s
 notion_sync/roadmap_sync.py — Sync an issue/PR event to the project's Notion roadmap table row.
 scripts/gen_context_files.py — Generate the standardised per-repo context files from the repo's own content.
 scripts/quality_gate.py
+shortcut_sync/__init__.py — Daily Shortcut sync: GitHub issues mirrored into Shortcut, epic and objective states kept in step.
+shortcut_sync/__main__.py — ``python3 -m shortcut_sync`` — run the daily Shortcut sync.
+shortcut_sync/closed_issue_resolver.py — Step 1 — a story created by the sync moves to done once its GitHub issue is closed.
+shortcut_sync/entrypoint.py — Entrypoint: read the environment, run the job, log counts, set the exit code.
+shortcut_sync/epic_progress_plan.py — The state move one epic needs so it follows its stories (owner rule sc-5963, reduced by sc-6014).
+shortcut_sync/epic_progress_sync.py — Step 3 — epic states follow the stories, then objectives follow the epics (sc-5963, sc-6014).
+shortcut_sync/epic_timeline.py — What the stories of one epic say: whether work has started, and whether it all ended.
+shortcut_sync/epic_workflow_states.py — Epic states resolved from ``GET /api/v3/epic-workflow`` — no state id is hardcoded.
+shortcut_sync/errors.py — Typed errors raised by the Shortcut sync.
+shortcut_sync/github_client.py — GitHub REST API — issues and issue comments of the mapped repositories.
+shortcut_sync/http_client.py — Stdlib JSON-over-HTTPS client with request pacing and bounded retries.
+shortcut_sync/issue_importer.py — Step 2 — open GitHub issues without a Shortcut link become stories in the mapped epic.
+shortcut_sync/issue_key.py — Identity of a GitHub issue, normalised so URLs and story markers compare equal.
+shortcut_sync/objective_progress_sync.py — Objectives start with their first started epic; they are never set to done (sc-5963).
+shortcut_sync/payloads.py — Typed shapes of the API payloads the sync reads (only the fields it uses).
+shortcut_sync/progress_writer.py — The only place that writes epics and objectives: dry-run aware, within the update cap.
+shortcut_sync/references.py — Pure helpers: Shortcut references, story typing, linked issues, issue comments.
+shortcut_sync/repo_mapping.py — Repository ↔ epic mapping, keyed by the epic ``external_id`` ``<owner>/<repo>``.
+shortcut_sync/repo_snapshot.py — What the run read for one reachable repository.
+shortcut_sync/shortcut_client.py — Shortcut REST API v3 — only the calls the sync needs.
+shortcut_sync/story_draft.py — A story about to be created. Deliberately has no label field (owner rule: no labels).
+shortcut_sync/story_writer.py — The only place that writes stories: creation and move-to-done, dry-run aware.
+shortcut_sync/sync_config.py — Job configuration read from the environment.
+shortcut_sync/sync_context.py — Dependencies shared by every sync step: configuration, API clients, report.
+shortcut_sync/sync_counter.py — Names of the counters the job reports. Logs carry only these counts and numeric ids.
+shortcut_sync/sync_job.py — One run: read Shortcut and GitHub, close and import repo by repo, then sync epic progress.
+shortcut_sync/sync_report.py — Run report: counters, the story-creation and epic/objective-update budgets, the action log.
+shortcut_sync/workflow_states.py — Workflow states resolved from ``GET /api/v3/workflows`` — no state id is hardcoded.
+tests/conftest.py — Shared fixtures. ``fake_http`` replaces the network for the shortcut_sync tests.
 tests/test_actions_yaml.py — Every composite action definition in this repo must be valid and runnable.
-tests/test_branch_sync.py — Unit tests for the branch-sync entrypoint (pure functions, no network).
-tests/test_notion_api.py — Unit tests for the Notion/GitHub HTTP helpers — no real network.
-tests/test_roadmap_sync.py — Unit tests for the roadmap-sync entrypoint (pure functions, no network).
-tests/test_sync_entrypoints.py — Entrypoint-level tests: the main() flows with every network call mocked.

@@ -1,0 +1,58 @@
+---
+# Daily Shortcut sync (DEC-V14-125, native-first scope sc-6014): GitHub issues -> Shortcut
+# stories, closed issues -> done, then epic and objective states follow their stories (states
+# only: Shortcut stamps the dates). SonarCloud and GuardRails stay native (required checks and
+# their own notifications). Logic and tests live in shortcut_sync/.
+# This repository is public: the job logs only counts and numeric ids.
+name: Shortcut sync
+
+on:
+    schedule:
+        - cron: "17 5 * * *"
+    workflow_dispatch:
+        inputs:
+            dry_run:
+                description: Read only and report the planned actions as counts (nothing is written)
+                type: boolean
+                default: true
+            max_creations:
+                description: Maximum number of Shortcut stories this run may create (empty = 25)
+                type: string
+                default: ""
+            max_progress_updates:
+                description: Maximum number of Shortcut epic and objective updates this run may write (empty = 50)
+                type: string
+                default: ""
+
+permissions: {}
+
+concurrency:
+    group: shortcut-sync
+    cancel-in-progress: false
+
+jobs:
+    sync:
+        name: Sync GitHub issues into Shortcut
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        # The two secrets live in this environment, restricted to the default branch, so a run
+        # dispatched from another branch cannot read the cross-repository token.
+        environment: shortcut-sync
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+
+            # Stdlib only: the runner's python3 (>= 3.12) is enough, and the job that holds
+            # the write tokens runs no extra setup action.
+            - name: Run the Shortcut sync
+              env:
+                  SHORTCUT_API_TOKEN: ${{ secrets.SHORTCUT_API_TOKEN }}
+                  SYNC_GITHUB_TOKEN: ${{ secrets.SYNC_GITHUB_TOKEN }}
+                  # Scheduled runs apply; a manual run follows its dry_run input.
+                  SYNC_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+                  SYNC_MAX_CREATIONS: ${{ inputs.max_creations }}
+                  SYNC_MAX_PROGRESS_UPDATES: ${{ inputs.max_progress_updates }}
+              run: python3 -m shortcut_sync
