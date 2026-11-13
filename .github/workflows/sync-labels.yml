@@ -10,6 +10,12 @@
   - cron: 0 2 * * 1
   workflow_dispatch: null
   workflow_call: null
+# Creating or updating labels needs issues: write; the repository default token
+# is read-only ("Resource not accessible by integration"). A caller must grant
+# the same scopes on its calling job, or the call is refused at start-up.
+permissions:
+  contents: read
+  issues: write
 jobs:
   sync-labels:
     name: Synchronize labels

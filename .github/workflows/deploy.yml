@@ -113,7 +113,7 @@ permissions:
     packages: write
 
 concurrency:
-    group: deploy-${{ github.workflow }}-${{ github.ref }}
+    group: reusable-deploy-${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: false
 
 jobs:

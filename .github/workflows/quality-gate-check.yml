@@ -10,7 +10,7 @@ permissions:
   statuses: write
 
 concurrency:
-  group: quality-gate-check-${{ github.ref }}
+  group: reusable-quality-gate-check-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

@@ -5,7 +5,7 @@ on:
     workflow_call:
 
 concurrency:
-    group: pages-${{ github.ref }}
+    group: reusable-pages-${{ github.ref }}
     cancel-in-progress: false
 
 permissions:
