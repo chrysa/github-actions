@@ -39,7 +39,7 @@ pre-commit hooks, with the release gate as the final safety net.
 ## D-0003 — Self-hosted runner default (chrysa-arc), public repos override to ubuntu-latest
 
 **Date**: 2026-06-28
-**Status**: accepted
+**Status**: accepted (amended 2026-11-07, see below)
 
 All reusable workflows (`workflow_call`) in this repository now expose a `runner`
 input (type: string, default: `chrysa-arc`) and set
@@ -69,6 +69,37 @@ fleet; public callers must opt out.
 `detect-conflicts.yml`, `pull-request-size.yml`, `sonar.yml`, `sync-labels.yml`,
 `update-pr-body.yml` — none of these are triggered by `workflow_call`; they are
 standalone push/PR/schedule workflows owned by this repo and not called by others.
+
+### D-0003 amendment — 2026-11-07: GitHub-hosted fallback when k3s is down
+
+**Date**: 2026-11-07
+**Status**: accepted
+**Source**: owner decision DEC-V14-103, answer to audit question
+CHRYSA-ARCH-018 (CHRYSA V14 audit).
+
+The decision above is unchanged. This amendment adds the fallback that was
+missing for private repos.
+
+- **Fallback**: when the k3s cluster that hosts the `chrysa-arc` ARC runners
+  (Kimsufi) is unavailable, private repos fall back to **GitHub-hosted
+  runners**. The switch is made in the caller workflow, with the existing
+  override: pass `runner: ubuntu-latest`, as public repos already do. The
+  reusable workflows do not change. The switch is manual: nothing detects
+  that k3s is down.
+- **Dependency: GitHub Actions billing**. The fallback works only after the
+  org's GitHub Actions billing is settled. On 2026-11-07, GitHub-hosted jobs
+  on private repos still fail within 1 to 3 seconds with "The job was not
+  started because recent account payments have failed or your spending limit
+  needs to be increased". Until billing is settled, the fallback is blocked
+  and private CI has no runner while k3s is down. A GitHub-hosted spending
+  limit of $0 (D5 step 2 of
+  [the 2026-06-28 design](docs/specs/2026-06-28-self-hosted-ci-design.md))
+  would also block the fallback.
+- **Return to self-hosted**: as soon as k3s and the `chrysa-arc` runners are
+  back, private callers remove the `runner: ubuntu-latest` override and go
+  back to the `chrysa-arc` default. The fallback is temporary, not a new
+  default.
+- **Public repos**: no change. They stay on `ubuntu-latest`, as decided above.
 
 ---
 
