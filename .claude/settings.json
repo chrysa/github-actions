@@ -4,6 +4,7 @@
     "commit": "",
     "pr": ""
   },
+  "effortLevel": "low",
   "hooks": {
     "PostToolUse": [
       {
@@ -42,6 +43,20 @@
         "matcher": "Edit|Write"
       }
     ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-compact.sh"
+            ],
+            "command": "bash",
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "hooks": [
@@ -57,6 +72,33 @@
           }
         ],
         "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/read_guard.py"
+            ],
+            "command": "python3",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Read"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/session-context.sh"
+            ],
+            "command": "bash",
+            "timeout": 10,
+            "type": "command"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
@@ -70,6 +112,7 @@
       }
     ]
   },
+  "model": "haiku",
   "permissions": {
     "allow": [
       "Bash(rtk git status *)",
@@ -99,7 +142,16 @@
       "Bash(rtk gh issue view *)",
       "Bash(rtk gh issue list *)",
       "Bash(rtk gh run list *)",
-      "Bash(rtk gh run view *)"
+      "Bash(rtk gh run view *)",
+      "Bash(make build)",
+      "Bash(make format)",
+      "Bash(make help)",
+      "Bash(make lint)",
+      "Bash(make test)",
+      "Bash(make typecheck)",
+      "Bash(make validate)",
+      "Bash(python -m pytest *)",
+      "Bash(mypy *)"
     ],
     "ask": [
       "Bash(git push *)",
@@ -145,7 +197,13 @@
       "Bash(rtk docker push *)",
       "Bash(rtk npm publish *)",
       "Bash(rtk twine upload *)",
-      "Bash(rtk rm -rf *)"
+      "Bash(rtk rm -rf *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(make dev *)",
+      "Bash(rtk git add *)",
+      "Bash(rtk git commit *)",
+      "Bash(rtk make dev *)"
     ],
     "deny": [
       "Read(**/.env)",

@@ -31,7 +31,7 @@ jobs:
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-            - uses: chrysa/github-actions/python-setup@v1.10.0
+            - uses: chrysa/github-actions/python-setup@v1.11.1
               with:
                   python-version: "3.14"
 
@@ -48,7 +48,7 @@ jobs:
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-            - uses: chrysa/github-actions/python-setup@v1.10.0
+            - uses: chrysa/github-actions/python-setup@v1.11.1
               with:
                   python-version: "3.14"
 
@@ -130,7 +130,7 @@ jobs:
 
             - name: Create GitHub Release
               if: steps.tag_check.outputs.exists == 'false'
-              uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+              uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
               with:
                   tag_name: v${{ steps.gitversion.outputs.majorMinorPatch }}
                   name: v${{ steps.gitversion.outputs.majorMinorPatch }}

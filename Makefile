@@ -53,7 +53,7 @@ docker-test: ## Validate GitHub Actions in Docker (CI-compatible)
 		"go install github.com/rhysd/actionlint/cmd/actionlint@latest && actionlint"
 
 test-cov: validate ## Run the Python test suite with coverage
-	@pytest --cov=notion_sync --cov-report=term-missing
+	@pytest --cov=notion_sync --cov=shortcut_sync --cov-report=term-missing
 
 lint: validate ## Lint composite actions (alias → validate)
 

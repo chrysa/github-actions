@@ -89,3 +89,72 @@ Follows D-0003: both jobs expose the `runner` input and use
 ecosystem-wide security gate (secret-scan + SAST in pre-commit and CI).
 
 ---
+
+## D-0005 — Central daily Shortcut sync hosted here
+
+**Date**: 2026-11-08
+**Status**: accepted (owner decision DEC-V14-125, Shortcut sc-5933); amended 2026-11-09 twice
+(sc-5963 / sc-5967, then reduced to a native-first scope by sc-6014 — the last amendment wins)
+
+Shortcut is the source of truth for work, GitHub for code, Sentry for errors (it opens
+GitHub issues natively), SonarCloud for quality. One central scheduled job,
+`.github/workflows/shortcut-sync.yml` running `python3 -m shortcut_sync`, mirrors them
+into Shortcut every day: open GitHub issues become stories in the epic whose
+`external_id` is `chrysa/<repo>`, closed issues move their story to done, and the
+SonarCloud quality gate drives the epic health plus one tracking story.
+
+**Why here:** this repository is public, so its Actions minutes are not billed (private
+repos' Actions currently fail on billing). It is a standalone `schedule` /
+`workflow_dispatch` workflow, not a `workflow_call`, so D-0003's self-hosted default does
+not apply: it runs on `ubuntu-latest`.
+
+**Constraints that follow from a public repository:** logs and the step summary carry
+counts and numeric ids only (no issue title, story name or repository name — some mapped
+repositories are private); error messages never contain a URL or a token; tokens never
+follow a redirect to another host. The job reads two secrets, `SHORTCUT_API_TOKEN` and
+`SYNC_GITHUB_TOKEN` (fine-grained PAT, issues read/write), and requests no
+`GITHUB_TOKEN` permission beyond `contents: read`.
+
+**Safety rails:** never adds labels to stories; at most 25 creations per run
+(configurable); manual runs default to dry run (read only, planned counts); workflow
+states are resolved from `GET /workflows`, never hardcoded.
+
+**Amendment 2026-11-09 (owner rules sc-5963, sc-5967):** two more steps. (1) The GuardRails
+check run `guardrails/scan` of each mapped repository's default branch drives one bug story
+(failing → opened once, passing → done); `SYNC_GITHUB_TOKEN` additionally needs
+**Checks: read**. GuardRails exposes no severity on the check run, so the rule keys on the
+`failure` conclusion. (2) Over the whole workspace, epic states and
+`started_at_override` / `completed_at_override` follow their stories, and an objective moves
+to `in progress` with its first started epic; `planned_start_date` and `deadline` are never
+written, a date set by hand is never overwritten, objectives are never set to done. Epic
+states come from `GET /epic-workflow`; epic + objective updates are capped at 50 per run
+(`SYNC_MAX_PROGRESS_UPDATES`).
+
+**Amendment 2026-11-09 — native-first scope (owner decision of 2026-11-09, sc-6014).** Native
+integrations come first; custom code stays only where no native option exists on the current
+free plans (Sentry Developer, Shortcut Free). This amendment supersedes the SonarCloud part of
+the decision above and both parts of the previous amendment where they differ:
+
+- **Correction:** Sentry does *not* open GitHub issues on the Developer plan — its alerts are
+  e-mail only (`GET /organizations/chrysa/available-actions/` returns `email` only). A Sentry
+  error reaches Shortcut by hand, from the e-mail.
+- **SonarCloud step removed** (epic health + tracking story, `SONAR_HOST_URL`): the quality gate
+  is a required check on pull requests and SonarCloud sends its own e-mails.
+- **GuardRails step removed** (bug story from `guardrails/scan`): the scan is a required check
+  on pull requests and GuardRails notifies Discord through its Slack-webhook setting pointed at
+  a Discord `<webhook>/slack` URL. `SYNC_GITHUB_TOKEN` needs **Issues read/write only** (no
+  more Checks: read).
+- **Kept:** closed issue → story done (idempotent, and it covers issues closed without a pull
+  request, which Shortcut's native GitHub event handlers — "PR opened → In Review", "PR merged
+  → Done" — do not see) and GitHub issues → stories + link comment (no native equivalent).
+- **Epic / objective progress reduced to state changes:** unstarted → started when a story has
+  started, all stories done → done, back to started when a not-done story reappears, objective
+  `to do` → `in progress` with its first started epic. `started_at_override` /
+  `completed_at_override` are no longer written (nor read for epics or objectives): Shortcut
+  sets the native `started_at` / `completed_at` when the state changes, and the overrides stay
+  for manual corrections. The `SYNC_MAX_PROGRESS_UPDATES` cap is kept.
+
+Trade-off: an epic moved by the daily run gets the run time as its native date (up to one day
+late); the owner corrects it by hand with the override when it matters.
+
+---

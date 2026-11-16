@@ -9,7 +9,7 @@ requires-python = ">=3.12"
 version = "0.0.0"
 
 [tool.setuptools]
-packages = ["notion_sync"]
+packages = ["notion_sync", "shortcut_sync"]
 
 [tool.ruff]
 extend-exclude = [".claude", "scripts/quality_gate.py"]
@@ -17,7 +17,7 @@ line-length = 110
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["B", "C90", "E", "F", "I", "PERF", "PL", "RUF", "SIM", "UP"]
+select = ["B", "C90", "E", "F", "I", "PERF", "PL", "RUF", "SIM", "UP", "T100", "T203", "LOG015", "ASYNC210", "ASYNC212", "ASYNC220", "ASYNC221", "ASYNC222", "ASYNC230", "ASYNC251"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
@@ -25,6 +25,6 @@ pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**" = ["PLR2004"]
-"**/test_*.py" = ["PLR2004"]
-"**/conftest.py" = ["PLR2004"]
+"**/tests/**" = ["PLR2004", "T203"]
+"**/test_*.py" = ["PLR2004", "T203"]
+"**/conftest.py" = ["PLR2004", "T203"]

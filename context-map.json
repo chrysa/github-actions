@@ -10,6 +10,7 @@
   "entry_points": [],
   "key_directories": [
     ".claude",
+    ".codex",
     ".github",
     "changelog",
     "check-branch-policy",
@@ -33,6 +34,7 @@
     "ruff-check",
     "run-tests",
     "scripts",
+    "shortcut_sync",
     "sonar-js-scan",
     "sonar-scan",
     "sonar-scan-node",
