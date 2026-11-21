@@ -12,7 +12,7 @@
     - .github/workflows/**
   workflow_call: null
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: reusable-action-check-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

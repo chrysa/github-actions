@@ -91,7 +91,7 @@ on:
 permissions: {}
 
 concurrency:
-    group: ci-${{ github.workflow }}-${{ github.ref }}
+    group: reusable-ci-python-ci-${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
 jobs:

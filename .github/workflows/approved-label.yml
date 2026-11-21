@@ -3,7 +3,7 @@
   workflow_call: null
 concurrency:
   cancel-in-progress: true
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: reusable-approved-label-${{ github.workflow }}-${{ github.ref }}
 jobs:
   label-when-approved:
     name: Label when approved

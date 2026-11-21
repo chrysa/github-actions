@@ -10,17 +10,18 @@
     - ready_for_review
     - reopened
     - synchronize
-  schedule:
-  - cron: 0 0 * * *
   workflow_call: null
   workflow_dispatch: null
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: reusable-pr-dependencies-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   check_dependencies:
     name: Check Dependencies
+    # The actions below read the pull request from the event payload: without a
+    # pull request (schedule, manual dispatch) they abort with "Not Found".
+    if: github.event.pull_request
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
