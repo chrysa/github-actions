@@ -18,7 +18,13 @@
 - Reusable-workflow version bump target: **`v1.2.x → v1.3.0`**.
 - Catalog apps follow the existing convention: Helm `Chart.yaml` + `values.yaml` per app under `catalog/apps/dev/`, reconciled by ArgoCD; secrets under `catalog/secrets/dev` follow the existing sealing pattern.
 - All workflow YAML must pass `actionlint` before commit.
-- Commit style: Conventional Commits, English, trailer `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`.
+- Commit style: Conventional Commits, English. No assistant attribution:
+  no `Co-Authored-By` trailer, no "Generated with" line, no session link.
+
+> **Amended 2026-11-07**: this constraint used to require a `Co-Authored-By`
+> trailer naming the assistant. That requirement is removed because it
+> contradicts the chrysa rule against assistant attribution in commits, PRs,
+> issues and tags (audit requirement EXG-0118; owner decision DEC-V14-103).
 
 ---
 
