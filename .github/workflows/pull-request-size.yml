@@ -1,23 +1,33 @@
+# pull_request_target gives a token that can write labels on Dependabot and fork
+# pull requests too. It is safe here: no step checks out or runs pull request code.
+# A caller of this reusable workflow must grant the same permissions to its job:
+# a reusable workflow cannot raise the caller's token permissions.
 "on":
   pull_request_target: null
   workflow_call: null
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: size-label-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   size-label:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     steps:
     - env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       name: Label pull request by size
-      uses: pascalgn/size-label-action@56b489b027932ec0cf60438a1a5f1a19c8fc71ff
+      uses: pascalgn/size-label-action@56b489b027932ec0cf60438a1a5f1a19c8fc71ff # v0.5.7
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        fail_if_xl: false
-        l_max_size: 800
-        m_max_size: 200
-        s_max_size: 50
-        xs_max_size: 20
+        # Only valid input of v0.5.7. Keys are the minimum changed lines per label:
+        # XS < 20, S < 50, M < 200, L < 800, XL >= 800 (same thresholds as before).
+        sizes: >-
+          {"0": "XS", "20": "S", "50": "M", "200": "L", "800": "XL"}
